@@ -1,0 +1,26 @@
+{{define "content"}}
+<h2>Signup</h2>
+<form hx-post="/v1/signup">
+    <div hx-target="this" hx-swap="outerHTML">
+        <label for="email">email:</label>
+        <input type="email" name="email" id="email" hx-post="/v1/validate/email" required>
+    </div>
+
+    <div hx-target="this" hx-swap="outerHTML">
+        <label for="username">username:</label>
+        <input type="username" name="username" id="username" hx-post="/v1/validate/username" required>
+    </div>
+
+    <div>
+        <label for="password">password:</label>
+        <!-- Password requirement: minimum eight characters, at least one letter, one number and one special character: -->
+        <input type="password" name="password" minlength="8"
+            pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" id="password" required/>
+        <span>minimum eight characters, at least one letter, one number and one special character</span>
+    </div>
+
+    <button>Sign Up</button>
+</form>
+
+<a href="/login">already a user?</a>
+{{end}}

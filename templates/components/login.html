@@ -1,0 +1,17 @@
+<!-- todo: find a way to reuse the login page and/or the input component -->
+<div>
+    <label for="email">Email:</label>
+    <input type="email" name="email" id="email" value="{{.Email}}">
+    {{if .EmailError}}
+    <span class="error">{{.EmailError}}</span>
+    {{end}}
+</div>
+<div>
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password" value="{{.Password}}">
+    {{if .PasswordError}}
+    <span class="error">{{.PasswordError}}</span>
+    {{end}}
+</div>
+
+<button>Log In</button>

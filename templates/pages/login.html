@@ -1,0 +1,17 @@
+{{define "content"}}
+<h2>Login</h2>
+<form hx-post="/v1/login" hx-swap="innerHTML" novalidate>
+    <div>
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email">
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password">
+    </div>
+
+    <button>Log In</button>
+</form>
+
+<a href="/signup">don't have an account?</a>
+{{end}}

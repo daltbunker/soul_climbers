@@ -1,0 +1,9 @@
+.vscode/*
+.DS_Store
+
+# config
+.env
+.air.toml
+
+# bin
+tmp/*
