@@ -7,6 +7,7 @@ import (
 
 	"github.com/daltbunker/soul_climbers/internal/database"
 	"github.com/daltbunker/soul_climbers/types"
+	"github.com/google/uuid"
 
 	_ "github.com/lib/pq"
 )
@@ -30,7 +31,7 @@ func NewUser(r *http.Request, user types.User) (types.User, error) {
 
 	newUser := types.User{
 		Username: dbUser.Username,
-		Email: dbUser.Email,
+		Email:    dbUser.Email,
 	}
 
 	return newUser, err
@@ -41,7 +42,7 @@ func GetUserByEmail(r *http.Request, email string) (types.User, error) {
 
 	user := types.User{
 		Username: dbUser.Username,
-		Email: dbUser.Email,
+		Email:    dbUser.Email,
 		Password: dbUser.Password,
 	}
 
@@ -53,9 +54,37 @@ func GetUserByUsername(r *http.Request, username string) (types.User, error) {
 
 	user := types.User{
 		Username: dbUser.Username,
-		Email: dbUser.Email,
+		Email:    dbUser.Email,
 		Password: dbUser.Password,
 	}
 
 	return user, err
+}
+
+func NewResetToken(r *http.Request, email string) (types.ResetPassword, error) {
+	dbResetToken, err := DB.CreateResetToken(r.Context(), database.CreateResetTokenParams{
+		Token:      uuid.New(),
+		Expiration: time.Now().Add(time.Minute * 10).UTC(),
+		Email:      email,
+	})
+
+	resetToken := types.ResetPassword{
+		Token:      dbResetToken.Token,
+		Expiration: dbResetToken.Expiration,
+		Email:      dbResetToken.Email,
+	}
+
+	return resetToken, err
+}
+
+func GetResetTokenByToken(r *http.Request, token uuid.UUID) (types.ResetPassword, error) {
+	dbResetToken, err := DB.GetResetTokenByToken(r.Context(), token)
+
+	resetToken := types.ResetPassword{
+		Token:      dbResetToken.Token,
+		Expiration: dbResetToken.Expiration,
+		Email:      dbResetToken.Email,
+	}
+
+	return resetToken, err
 }

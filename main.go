@@ -27,6 +27,11 @@ func main() {
 	if port == "" {
 		log.Fatal("PORT not found in env")
 	}
+	sessionKey := os.Getenv("SESSION_KEY")
+	if sessionKey == "" {
+		log.Fatal("SESSION_KEY not found in env")
+	}
+	handlers.Init(sessionKey)
 
 	err = db.InitDatabase(dbURL)
 	if err != nil {
@@ -44,7 +49,8 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	registerPublicRoutes(router)
+	handlers.InitPages()
+	registerRoutes(router)
 
 	srv := &http.Server{
 		Handler: router,
@@ -59,24 +65,47 @@ func main() {
 	}
 }
 
-func registerPublicRoutes(r *chi.Mux) {
-	publicRouter := chi.NewRouter()
-
+func registerRoutes(r *chi.Mux) {
 	fs := http.FileServer(http.Dir("./static"))
-	publicRouter.Handle("/static/*", http.StripPrefix("/static/", fs))
+	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 
-	// routes 
-	publicRouter.Get("/", handlers.HandleGetHome)
-	publicRouter.Get("/login", handlers.HandleGetLogin)
-	publicRouter.Get("/signup", handlers.HandleGetSignup)
+	// public 
+	r.Group(func(r chi.Router) {
+		// page routes
+		r.Get("/", handlers.HandleGetHome)
+		r.Get("/login", handlers.HandleGetLogin)
+		r.Get("/login/reset/email", handlers.HandleGetResetEmail) // This is part of the password reset process, not to reset email
+		r.Get("/login/reset/password", handlers.HandleGetResetPassword)
+		r.Get("/signup", handlers.HandleGetSignup)
 
-	// data requests 
-	publicRouter.Get("/v1/healthz", handlers.HandleGetHealth)
-	publicRouter.Post("/v1/signup", handlers.HandleNewUser)
-	publicRouter.Post("/v1/login", handlers.HandleLoginUser)
-	publicRouter.Post("/v1/validate/email", handlers.HandleEmailValidate)
-	publicRouter.Post("/v1/validate/username", handlers.HandleUsernameValidate)
-	publicRouter.Post("/v1/validate/password", handlers.HandlePasswordValidate)
+		// data routes 
+		r.Get("/v1/healthz", handlers.HandleGetHealth)
+		r.Post("/v1/signup", handlers.HandleNewUser)
+		r.Post("/v1/login", handlers.HandleLoginUser)
+		r.Post("/v1/login/reset/email", handlers.HandleEmailResetLink)
+		r.Post("/v1/login/reset/password", handlers.HandlePasswordReset)
+    })
 
-	r.Mount("/", publicRouter)
+	// protected 
+	r.Group(func(r chi.Router) {
+		r.Use(sessionMiddleware)
+		r.Get("/admin", handlers.HandleGetAdmin)
+	})
+}
+
+func sessionMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, err := handlers.GetSession(r)
+		if err != nil {
+			handlers.HandleServerError(w, err)
+			return
+		}
+
+		if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+			handlers.HandleUnautorized(w, err)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

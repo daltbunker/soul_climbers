@@ -1,0 +1,31 @@
+{{define "signup"}}
+<form hx-post="/v1/signup">
+    <div hx-target="this" hx-swap="outerHTML">
+        <label for="email">email:</label>
+        <input type="email" value="{{.Email}}" name="email" id="email" required>
+        {{if .EmailError}}
+        <span class="error">{{.EmailError}}</span>
+        {{end}}
+    </div>
+
+    <div hx-target="this" hx-swap="outerHTML">
+        <label for="username">username:</label>
+        <input type="username" value="{{.Username}}" name="username" id="username" required>
+        {{if .UsernameError}}
+        <span class="error">{{.UsernameError}}</span>
+        {{end}}
+    </div>
+
+    <div hx-target="this" hx-swap="outerHTML">
+        <label for="password">password:</label>
+        <input type="password" value="{{.Password}}" name="password" id="password" required>
+        {{if .PasswordError}}
+        <span class="error">{{.PasswordError}}</span>
+        {{else}}
+        <span>minimum eight characters, at least one letter, one number and one special character</span>
+        {{end}}
+    </div>
+
+    <button>Sign Up</button>
+</form>
+{{end}}

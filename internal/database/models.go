@@ -6,7 +6,15 @@ package database
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
+
+type ResetToken struct {
+	Token      uuid.UUID
+	Expiration time.Time
+	Email      string
+}
 
 type User struct {
 	UsersID   int32

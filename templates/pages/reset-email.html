@@ -1,0 +1,11 @@
+{{define "content"}}
+<h2>Reset Password</h2>
+<h3 id="subheader"></h3>
+<form hx-post="/v1/login/reset/email" hx-target="#subheader" novalidate>
+    <div>
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email">
+    </div>
+    <button>Submit</button>
+</form>
+{{end}}
