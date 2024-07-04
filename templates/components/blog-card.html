@@ -1,0 +1,9 @@
+{{define "blog-card"}}
+    <div>
+        <a href="/blog/{{.Id}}" class="">
+            <h2>{{.Title}}</h2>
+        </a>
+        <span><i>{{.CreatedBy}}, {{.CreatedAt}}</i></span>
+        <p>{{printf "%.125s..." .Body}}</p>
+    </div>
+{{end}}

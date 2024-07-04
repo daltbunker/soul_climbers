@@ -115,7 +115,7 @@ func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Welcome %s", dbUser.Username)
+	fmt.Fprintf(w, "Welcome %s, <a href=\"admin/blog\">Create Blog</a>", dbUser.Username)
 }
 
 func newSession(r *http.Request, w http.ResponseWriter) error {
@@ -159,7 +159,7 @@ func HandlePasswordReset(w http.ResponseWriter, r *http.Request) {
 	resetToken, err := r.Cookie("Reset-Token")
 	if err != nil {
 		log.Printf("Cookie 'Reset-Token' not found %v", err)
-		fmt.Fprint(w, "Failed to find cookie")
+		HandleClientError(w, err)
 		return
 	}
 

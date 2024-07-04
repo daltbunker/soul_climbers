@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"text/template"
 	"time"
 
 	"github.com/daltbunker/soul_climbers/db"
 	"github.com/daltbunker/soul_climbers/types"
+	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
 
@@ -17,13 +19,20 @@ var baseTemplate = "templates/base.html"
 func HandleGetHome(w http.ResponseWriter, r *http.Request) {
 	if pages["home"] == nil {
 		var err error
-		pages["home"], err = template.ParseFiles(baseTemplate, "templates/pages/home.html")
+		pages["home"], err = template.ParseFiles(baseTemplate, "templates/pages/home.html", "templates/components/blog-card.html")
 		if err != nil {
 			HandleServerError(w, err)
 			return
 		}
 	}
-	renderPage(pages["home"], w, nil)
+
+	blogs, err := db.GetAllBlogs(r)
+	if err != nil {
+		HandleServerError(w, err)
+	}
+	d := types.Home{Blogs: blogs}
+
+	renderPage(pages["home"], w, d)
 }
 
 func HandleGetLogin(w http.ResponseWriter, r *http.Request) {
@@ -93,8 +102,41 @@ func HandleGetResetPassword(w http.ResponseWriter, r *http.Request) {
 	renderPage(pages["resetPassword"], w, nil)
 }
 
-func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "<h1>Admin Page</h1>")
+func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
+	if pages["blog"] == nil {
+		var err error
+		pages["blog"], err = template.ParseFiles(baseTemplate, "templates/pages/blog.html")
+		if err != nil {
+			HandleServerError(w, err)
+			return
+		}
+	}
+	
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		log.Printf("Blog id must be type int: %v", err)
+		HandleClientError(w, err)
+	}
+
+	blog, err := db.GetBlogById(r, int32(id))
+	if err != nil {
+		HandleServerError(w, err)
+	}
+
+	renderPage(pages["blog"], w, blog)
+}
+
+func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
+	if pages["blogForm"] == nil {
+		var err error
+		pages["blogForm"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-form.html")
+		if err != nil {
+			HandleServerError(w, err)
+			return
+		}
+	}
+
+	renderPage(pages["blogForm"], w, nil)
 }
 
 func setCookie(w http.ResponseWriter, name string, value string) {

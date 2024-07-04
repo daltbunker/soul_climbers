@@ -10,6 +10,23 @@ import (
 	"github.com/google/uuid"
 )
 
+type Blog struct {
+	BlogID    int32
+	Body      []byte
+	Title     string
+	CreatedBy int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type BlogImg struct {
+	ImgName   string
+	Img       []byte
+	BlogID    int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type ResetToken struct {
 	Token      uuid.UUID
 	Expiration time.Time

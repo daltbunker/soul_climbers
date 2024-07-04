@@ -32,7 +32,7 @@ func HandleUnautorized(w http.ResponseWriter, err error) {
 		}
 	}
 	w.WriteHeader(http.StatusForbidden)
-	log.Printf("user unauthorized: %v", err)
+	log.Printf("user unauthorized")
 	renderPage(pages["unauthorized"], w, nil)
 }
 

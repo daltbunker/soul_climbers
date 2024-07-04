@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed loading .env")
 	}
-	dbURL := os.Getenv("DB_URL_DVL") // _PROD | _DVL
+	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL not found in env")
 	}
@@ -69,27 +69,29 @@ func registerRoutes(r *chi.Mux) {
 	fs := http.FileServer(http.Dir("./static"))
 	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 
-	// public 
+	// public
 	r.Group(func(r chi.Router) {
 		// page routes
 		r.Get("/", handlers.HandleGetHome)
 		r.Get("/login", handlers.HandleGetLogin)
-		r.Get("/login/reset/email", handlers.HandleGetResetEmail) // This is part of the password reset process, not to reset email
-		r.Get("/login/reset/password", handlers.HandleGetResetPassword)
+		// r.Get("/login/reset/email", handlers.HandleGetResetEmail) // This is part of the password reset process, not to reset email
+		// r.Get("/login/reset/password", handlers.HandleGetResetPassword)
 		r.Get("/signup", handlers.HandleGetSignup)
 
-		// data routes 
+		// data routes
 		r.Get("/v1/healthz", handlers.HandleGetHealth)
-		r.Post("/v1/signup", handlers.HandleNewUser)
+		// r.Post("/v1/signup", handlers.HandleNewUser)
 		r.Post("/v1/login", handlers.HandleLoginUser)
-		r.Post("/v1/login/reset/email", handlers.HandleEmailResetLink)
-		r.Post("/v1/login/reset/password", handlers.HandlePasswordReset)
-    })
+		// r.Post("/v1/login/reset/email", handlers.HandleEmailResetLink)
+		// r.Post("/v1/login/reset/password", handlers.HandlePasswordReset)
+		r.Get("/blog/{id}", handlers.HandleGetBlog)
+	})
 
-	// protected 
+	// protected
 	r.Group(func(r chi.Router) {
 		r.Use(sessionMiddleware)
-		r.Get("/admin", handlers.HandleGetAdmin)
+		r.Get("/admin/blog", handlers.HandleGetBlogForm)
+		r.Post("/v1/blog", handlers.HandleNewBlog)
 	})
 }
 
