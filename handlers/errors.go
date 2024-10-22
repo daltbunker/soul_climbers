@@ -16,8 +16,9 @@ func HandleServerError(w http.ResponseWriter, err error) {
 			return
 		}
 	}
+	// FIXME: returns error message and html, html doesn't render
 	w.WriteHeader(http.StatusInternalServerError)
-	log.Printf("internal Server Error: %v", err)
+	log.Printf("internal server error: %v", err)
 	renderPage(pages["serverError"], w, nil)
 }
 

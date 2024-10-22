@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var baseTemplate = "templates/base.html" 
+var baseTemplate = "templates/base.html"
 
 func HandleGetHome(w http.ResponseWriter, r *http.Request) {
 	if pages["home"] == nil {
@@ -111,7 +111,7 @@ func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	
+
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		log.Printf("Blog id must be type int: %v", err)
@@ -136,9 +136,120 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	renderPage(pages["blogForm"], w, nil)
+	paramId := chi.URLParam(r, "id")
+	if paramId == ""{
+		blogForm := types.BlogForm {
+			FormAction: "/admin/blog/preview",
+			FormMethod: "post",
+		}
+		renderPage(pages["blogForm"], w, blogForm)
+		return
+	}
+
+	id, err := strconv.Atoi(paramId)	
+	if err != nil {
+		log.Printf("Blog id must be type int: %v", err)
+		HandleClientError(w, err)
+	}
+
+	blog, err := db.GetBlogById(r, int32(id))
+	if err != nil {
+		HandleServerError(w, err)
+	}	
+	
+	blogForm := types.BlogForm {
+		Id: blog.Id,
+		Body: blog.Body,
+		Title: blog.Title,
+		Excerpt: blog.Excerpt,
+		FormAction: "/admin/blog/preview/" + paramId,
+		FormMethod: "post",
+	}
+
+	renderPage(pages["blogForm"], w, blogForm)
 }
 
+func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
+
+	if pages["blogPreview"] == nil {
+		var err error
+		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
+		if err != nil {
+			HandleServerError(w, err)
+			return
+		}
+	}
+
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		log.Printf("Blog id must be type int: %v", err)
+		HandleClientError(w, err)
+	}
+
+	blog, err := db.GetBlogById(r, int32(id))
+	if err != nil {
+		HandleServerError(w, err)
+	}
+
+	renderPage(pages["blogPreview"], w, blog)	
+}
+
+func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
+	newBlog := types.Blog{}
+	newBlog.Title = r.FormValue("title")
+	newBlog.Body = r.FormValue("body")
+	newBlog.Excerpt= r.FormValue("excerpt")
+	newBlog.IsPublished = false
+	newBlog.CreatedBy = "jonnyX"
+
+	blog, err := db.NewBlog(r, newBlog)
+	if err != nil {
+		HandleClientError(w, err)
+	}
+	
+	if pages["blogPreview"] == nil {
+		var err error
+		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
+		if err != nil {
+			HandleServerError(w, err)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)), http.StatusSeeOther)
+}
+
+func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
+
+	paramId := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(paramId)	
+
+	updatedBlog := types.Blog{}
+	updatedBlog.Id = int32(id)
+	updatedBlog.Title = r.FormValue("title")
+	updatedBlog.Body = r.FormValue("body")
+	updatedBlog.Excerpt= r.FormValue("excerpt")
+	updatedBlog.IsPublished = false
+
+	log.Println("UPDATING BLOG: " + paramId)
+
+	blog, err := db.UpdateBlog(r, updatedBlog)
+	if err != nil {
+		HandleClientError(w, err)
+	}
+	
+	if pages["blogPreview"] == nil {
+		var err error
+		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
+		if err != nil {
+			HandleServerError(w, err)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)), http.StatusSeeOther)
+
+}
 func setCookie(w http.ResponseWriter, name string, value string) {
 	cookie := &http.Cookie{
 		Name:  name,

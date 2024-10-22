@@ -11,23 +11,27 @@ import (
 )
 
 const createBlog = `-- name: CreateBlog :one
-INSERT INTO blog(body, title, created_by, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING blog_id, body, title, created_by, created_at, updated_at
+INSERT INTO blog(body, title, excerpt, is_published, created_by, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING blog_id, body, title, excerpt, is_published, created_by, created_at, updated_at
 `
 
 type CreateBlogParams struct {
-	Body      []byte
-	Title     string
-	CreatedBy int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Body        []byte
+	Title       string
+	Excerpt     string
+	IsPublished bool
+	CreatedBy   int32
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (q *Queries) CreateBlog(ctx context.Context, arg CreateBlogParams) (Blog, error) {
 	row := q.db.QueryRowContext(ctx, createBlog,
 		arg.Body,
 		arg.Title,
+		arg.Excerpt,
+		arg.IsPublished,
 		arg.CreatedBy,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -37,6 +41,8 @@ func (q *Queries) CreateBlog(ctx context.Context, arg CreateBlogParams) (Blog, e
 		&i.BlogID,
 		&i.Body,
 		&i.Title,
+		&i.Excerpt,
+		&i.IsPublished,
 		&i.CreatedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -45,18 +51,20 @@ func (q *Queries) CreateBlog(ctx context.Context, arg CreateBlogParams) (Blog, e
 }
 
 const getAllBlogs = `-- name: GetAllBlogs :many
-SELECT b.blog_id, b.title, b.body, b.created_at, u.username
+SELECT b.blog_id, b.title, b.body, b.excerpt, b.is_published, b.created_at, u.username
 FROM blog b
 INNER JOIN users u
     ON b.created_by = u.users_id
 `
 
 type GetAllBlogsRow struct {
-	BlogID    int32
-	Title     string
-	Body      []byte
-	CreatedAt time.Time
-	Username  string
+	BlogID      int32
+	Title       string
+	Body        []byte
+	Excerpt     string
+	IsPublished bool
+	CreatedAt   time.Time
+	Username    string
 }
 
 func (q *Queries) GetAllBlogs(ctx context.Context) ([]GetAllBlogsRow, error) {
@@ -72,6 +80,8 @@ func (q *Queries) GetAllBlogs(ctx context.Context) ([]GetAllBlogsRow, error) {
 			&i.BlogID,
 			&i.Title,
 			&i.Body,
+			&i.Excerpt,
+			&i.IsPublished,
 			&i.CreatedAt,
 			&i.Username,
 		); err != nil {
@@ -89,7 +99,7 @@ func (q *Queries) GetAllBlogs(ctx context.Context) ([]GetAllBlogsRow, error) {
 }
 
 const getBlogById = `-- name: GetBlogById :one
-SELECT b.blog_id, b.title, b.body, b.created_at, u.username 
+SELECT b.blog_id, b.title, b.body, b.excerpt, b.is_published, b.created_at, u.username 
 FROM blog b
 INNER JOIN users u
     ON b.created_by = u.users_id
@@ -97,11 +107,13 @@ WHERE b.blog_id = $1
 `
 
 type GetBlogByIdRow struct {
-	BlogID    int32
-	Title     string
-	Body      []byte
-	CreatedAt time.Time
-	Username  string
+	BlogID      int32
+	Title       string
+	Body        []byte
+	Excerpt     string
+	IsPublished bool
+	CreatedAt   time.Time
+	Username    string
 }
 
 func (q *Queries) GetBlogById(ctx context.Context, blogID int32) (GetBlogByIdRow, error) {
@@ -111,8 +123,53 @@ func (q *Queries) GetBlogById(ctx context.Context, blogID int32) (GetBlogByIdRow
 		&i.BlogID,
 		&i.Title,
 		&i.Body,
+		&i.Excerpt,
+		&i.IsPublished,
 		&i.CreatedAt,
 		&i.Username,
+	)
+	return i, err
+}
+
+const updateBlog = `-- name: UpdateBlog :one
+UPDATE blog
+   SET title = $1,
+       body = $2,
+       excerpt = $3,
+       is_published = $4,
+       updated_at = $5
+ WHERE blog_id = $6
+RETURNING blog_id, body, title, excerpt, is_published, created_by, created_at, updated_at
+`
+
+type UpdateBlogParams struct {
+	Title       string
+	Body        []byte
+	Excerpt     string
+	IsPublished bool
+	UpdatedAt   time.Time
+	BlogID      int32
+}
+
+func (q *Queries) UpdateBlog(ctx context.Context, arg UpdateBlogParams) (Blog, error) {
+	row := q.db.QueryRowContext(ctx, updateBlog,
+		arg.Title,
+		arg.Body,
+		arg.Excerpt,
+		arg.IsPublished,
+		arg.UpdatedAt,
+		arg.BlogID,
+	)
+	var i Blog
+	err := row.Scan(
+		&i.BlogID,
+		&i.Body,
+		&i.Title,
+		&i.Excerpt,
+		&i.IsPublished,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

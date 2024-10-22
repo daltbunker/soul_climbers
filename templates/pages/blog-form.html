@@ -1,12 +1,18 @@
 {{define "content"}}
     <h2>Create Blog</h2>
-    <form action="">
-        <label for="">Title</label>
-        <input type="text">
+    <form action="{{.FormAction}}" method="{{.FormMethod}}">
+        <label for="title">Title</label>
+        <input type="text" name="title" id="title" value="{{.Title}}">
 
-        <label for="">Body</label>
-        <textarea name="" id="" cols="30" rows="10"></textarea>
+        <label for="excerpt">Excerpt</label>
+        <textarea name="excerpt" id="excerpt" cols="30" rows="10">{{.Excerpt}}</textarea>
 
-        <button>submit</button>
+        <label for="body">Body</label>
+        <textarea name="body" id="body" cols="30" rows="10">{{.Body}}</textarea>
+
+        <label for="thumbnail">Thumbnail</label>
+        <input type="file" name="thumbnail" id="thumbnail">
+
+        <button>preview</button>
     </form>
 {{end}}

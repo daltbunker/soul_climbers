@@ -11,12 +11,14 @@ import (
 )
 
 type Blog struct {
-	BlogID    int32
-	Body      []byte
-	Title     string
-	CreatedBy int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	BlogID      int32
+	Body        []byte
+	Title       string
+	Excerpt     string
+	IsPublished bool
+	CreatedBy   int32
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type BlogImg struct {

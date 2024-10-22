@@ -113,6 +113,8 @@ func NewBlog(r *http.Request, blog types.Blog) (types.Blog, error) {
 	dbBlog, err := DB.CreateBlog(r.Context(), database.CreateBlogParams{
 		Body:      []byte(blog.Body),
 		Title:     blog.Title,
+		Excerpt:   blog.Excerpt,
+		IsPublished: blog.IsPublished,
 		CreatedBy: user.UsersID,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
@@ -122,13 +124,43 @@ func NewBlog(r *http.Request, blog types.Blog) (types.Blog, error) {
 	}
 
 	newBlog := types.Blog{
+		Id: dbBlog.BlogID,
 		Body:      string(dbBlog.Body[:]),
 		Title:     dbBlog.Title,
+		Excerpt:   dbBlog.Excerpt,
+		IsPublished: dbBlog.IsPublished,
 		CreatedBy: user.Username,
 		CreatedAt: dbBlog.CreatedAt.Format("02 Jan 2006"),
 	}
 
 	return newBlog, nil
+}
+
+func UpdateBlog(r *http.Request, blog types.Blog) (types.Blog, error) {
+
+	dbBlog, err := DB.UpdateBlog(r.Context(), database.UpdateBlogParams{
+		Title:     blog.Title,
+		Body:      []byte(blog.Body),
+		Excerpt:   blog.Excerpt,
+		IsPublished: blog.IsPublished,
+		UpdatedAt: time.Now().UTC(),
+		BlogID: blog.Id,
+	})
+	if err != nil {
+		return types.Blog{}, err
+	}
+
+	updatedBlog := types.Blog{
+		Id: dbBlog.BlogID,
+		Body:      string(dbBlog.Body[:]),
+		Title:     dbBlog.Title,
+		Excerpt:   dbBlog.Excerpt,
+		IsPublished: dbBlog.IsPublished,
+		CreatedBy: blog.CreatedBy,
+		CreatedAt: dbBlog.CreatedAt.Format("02 Jan 2006"),
+	}
+
+	return updatedBlog, nil
 }
 
 func GetAllBlogs(r *http.Request) ([]types.Blog, error) {
@@ -141,7 +173,8 @@ func GetAllBlogs(r *http.Request) ([]types.Blog, error) {
 		blog := types.Blog{}
 		blog.Id = b.BlogID
 		blog.Title = b.Title
-		blog.Body = string(b.Body)
+		blog.Excerpt = b.Excerpt
+		blog.IsPublished = b.IsPublished
 		blog.CreatedBy = b.Username
 		blog.CreatedAt = b.CreatedAt.Format("02 Jan 2006")
 		blogs = append(blogs, blog)
@@ -159,7 +192,9 @@ func GetBlogById(r *http.Request, id int32) (types.Blog, error) {
 	blog := types.Blog{}
 	blog.Title = dbBlog.Title
 	blog.Id = dbBlog.BlogID
+	blog.Excerpt = dbBlog.Excerpt
 	blog.Body = string(dbBlog.Body)
+	blog.IsPublished = dbBlog.IsPublished
 	blog.CreatedBy = dbBlog.Username
 	blog.CreatedAt = dbBlog.CreatedAt.Format("02 Jan 2006")
 	return blog, nil

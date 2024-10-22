@@ -1,9 +1,9 @@
 {{define "blog-card"}}
     <div>
-        <a href="/blog/{{.Id}}" class="">
+        <a href="/blog/{{.Id}}">
             <h2>{{.Title}}</h2>
         </a>
         <span><i>{{.CreatedBy}}, {{.CreatedAt}}</i></span>
-        <p>{{printf "%.125s..." .Body}}</p>
+        <p>{{.Excerpt}}</p>
     </div>
 {{end}}

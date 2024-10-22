@@ -1,0 +1,8 @@
+{{define "content"}}
+    <h2>{{.Title}}</h2>
+    <p>{{.Excerpt}}</p>
+    <p>{{.Body}}</p>
+
+    <a href="/admin/blog/{{.Id}}">edit</a>
+    <button hx-post="TODO...">submit</button>
+{{end}}

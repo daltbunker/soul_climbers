@@ -15,7 +15,7 @@ func InitPages() {
 
 func GetPage(w http.ResponseWriter, name string) (*template.Template, error) {
 	if pages[name] == nil {
-		HandleServerError(w, fmt.Errorf("page '%s' is not defined", name))
+		return &template.Template{}, fmt.Errorf("page '%s' is not defined", name)
 	}
 	return pages[name], nil
 }
