@@ -5,6 +5,7 @@ type BlogForm struct {
 	Body string
 	Title string
 	Excerpt string
+	ImgName string
 	FormAction string
 	FormMethod string
 }

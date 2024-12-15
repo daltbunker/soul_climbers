@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"text/template"
+
+    "github.com/microcosm-cc/bluemonday"
 )
 
 var pages map[string]*template.Template
@@ -38,4 +40,9 @@ func renderComponent(w http.ResponseWriter, page string, name string, data inter
 	if err != nil {
 		HandleServerError(w, err)
 	}
+}
+
+func sanitize(s string) string {
+    var p = bluemonday.UGCPolicy()
+    return p.Sanitize(s)
 }

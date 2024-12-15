@@ -54,7 +54,7 @@ func main() {
 
 	srv := &http.Server{
 		Handler: router,
-		Addr:    ":" + port,
+		Addr: ":" + port,
 	}
 
 	fmt.Printf("Server running on port %v", port)
@@ -90,12 +90,15 @@ func registerRoutes(r *chi.Mux) {
 	// protected
 	r.Group(func(r chi.Router) {
 		// r.Use(sessionMiddleware) TODO: commented out for testing only
+		r.Get("/admin", handlers.HandleGetAdmin)
 		r.Get("/admin/blog", handlers.HandleGetBlogForm)
 		r.Get("/admin/blog/{id}", handlers.HandleGetBlogForm)
 		r.Get("/admin/blog/preview/{id}", handlers.HandleGetBlogPreview)
 		r.Post("/admin/blog/preview/{id}", handlers.HandleUpdateBlogPreview) // HTML forms only allow GET and POST
 		r.Post("/admin/blog/preview", handlers.HandleNewBlogPreview)
-		r.Post("/v1/blog", handlers.HandleNewBlog)
+		r.Post("/admin/blog/{id}", handlers.HandlePublishBlog) // HTML forms only allow GET and POST
+		r.Get("/v1/blog/{id}/{imgName}", handlers.GetBlogImg)
+		r.Delete("/v1/blog/{id}/thumbnail", handlers.DeleteBlogImg)
 	})
 }
 

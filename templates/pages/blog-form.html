@@ -1,18 +1,55 @@
 {{define "content"}}
     <h2>Create Blog</h2>
-    <form action="{{.FormAction}}" method="{{.FormMethod}}">
-        <label for="title">Title</label>
-        <input type="text" name="title" id="title" value="{{.Title}}">
+    <form action="{{.FormAction}}" method="{{.FormMethod}}" enctype="multipart/form-data" class="form-fields">
 
-        <label for="excerpt">Excerpt</label>
-        <textarea name="excerpt" id="excerpt" cols="30" rows="10">{{.Excerpt}}</textarea>
+        <div id="file-container">
+        {{if .ImgName}}
+            <div class="input-container">
+                <div>Thumbnail:</div>
+                <span>
+                    {{.ImgName}}
+                    <button title="Delete file" class="btn-x" type="button" hx-delete="/v1/blog/{{.Id}}/thumbnail" hx-target="#file-container">&times;</button>
+                </span>
+            </div>
+        {{else}}
+            <div class="input-container">
+                <label for="thumbnail">Thumbnail:</label>
+                <input type="file" name="thumbnail" id="thumbnail">
+            </div>
+        {{end}}
+        </div>
 
-        <label for="body">Body</label>
-        <textarea name="body" id="body" cols="30" rows="10">{{.Body}}</textarea>
+        <div class="input-container">
+            <label for="title">Title:<span id="title-count" class="warning"></span></label>
+            <input type="text" name="title" id="title" value="{{.Title}}" maxlength="100">
+        </div>
 
-        <label for="thumbnail">Thumbnail</label>
-        <input type="file" name="thumbnail" id="thumbnail">
+        <div class="input-container">
+            <label for="excerpt">Excerpt:<span id="excerpt-count" class="warning"></span></label>
+            <textarea name="excerpt" id="excerpt" rows="6" maxlength="250">{{.Excerpt}}</textarea>
+        </div>
 
-        <button>preview</button>
+        <div class="input-container">
+            <label for="body">Body:<span id="body-count" class="warning"></span></label>
+            <textarea name="body" id="body" rows="50" maxlength="5000">{{.Body}}</textarea>
+        </div>
+
+        <div>
+            <button class="btn-primary">preview</button>
+        </div>
     </form>
+    <script>
+        const inputs = ['title', 'excerpt', 'body'];
+        inputs.forEach(input => {
+            const element = document.getElementById(input)
+            const elementCount = document.getElementById(input + '-count')
+            element.addEventListener('input', e => {
+                if (e.target.value.length >= e.target.maxLength - 10) {
+                    elementCount.textContent = `${e.target.value.length}/${e.target.maxLength} characters`
+                } else {
+                    elementCount.textContent = ''
+                }
+            });
+        })
+    </script>
 {{end}}

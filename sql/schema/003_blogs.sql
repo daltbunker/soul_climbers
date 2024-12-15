@@ -16,7 +16,7 @@ CREATE TABLE blog_img (
     blog_id INT NOT NULL REFERENCES blog(blog_id),
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    PRIMARY KEY(img_name, blog_id)
+    PRIMARY KEY(img_name, blog_id) --TODO: don't need img_name as part of PK
 );
 
 -- +goose Down

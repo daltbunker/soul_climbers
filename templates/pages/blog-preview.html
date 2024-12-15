@@ -1,8 +1,23 @@
 {{define "content"}}
+    {{if .ImgName}}
+    <img src="/v1/blog/{{.Id}}/{{.ImgName}}" alt="">
+    {{else}}
+    <div class="empty-img">No Image</div>
+    {{end}}
     <h2>{{.Title}}</h2>
     <p>{{.Excerpt}}</p>
     <p>{{.Body}}</p>
 
-    <a href="/admin/blog/{{.Id}}">edit</a>
-    <button hx-post="TODO...">submit</button>
+    <div class="line-up">
+        <a href="/admin/blog/{{.Id}}">
+            <button class="btn-secondary">edit</button>
+        </a>
+        <form action="/admin/blog/{{.Id}}" method="post">
+            {{if .IsPublished}}
+            <button class="btn-primary disabled" disabled>publish</button>
+            {{else}}
+            <button class="btn-primary">publish</button>
+            {{end}}
+        </form>
+    </div>
 {{end}}

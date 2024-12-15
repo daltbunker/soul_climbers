@@ -197,5 +197,82 @@ func GetBlogById(r *http.Request, id int32) (types.Blog, error) {
 	blog.IsPublished = dbBlog.IsPublished
 	blog.CreatedBy = dbBlog.Username
 	blog.CreatedAt = dbBlog.CreatedAt.Format("02 Jan 2006")
+	blog.ImgName = dbBlog.ImgName.String
+
 	return blog, nil
+}
+
+func NewBlogImg(r *http.Request, blogImg types.BlogImg) (types.BlogImg, error) {
+	dbBlogImg, err := DB.CreateBlogImg(r.Context(), database.CreateBlogImgParams{
+		ImgName: blogImg.ImgName,
+		Img: blogImg.Img,
+		BlogID: blogImg.BlogId,
+		CreatedAt: time.Now().UTC(),	
+		UpdatedAt: time.Now().UTC(),	
+	})
+
+	if err != nil {
+		return types.BlogImg{}, err 
+	}
+
+	newBlogImg := types.BlogImg{
+		ImgName: dbBlogImg.ImgName,
+		Img: dbBlogImg.Img,
+		BlogId: dbBlogImg.BlogID,
+		CreatedAt: dbBlogImg.CreatedAt.Format("02 Jan 2006"),
+		UpdatedAt: dbBlogImg.UpdatedAt.Format("02 Jan 2006"),
+	}
+
+	return newBlogImg, nil
+}
+
+func GetBlogImg(r *http.Request, id int32) (types.BlogImg, error) {
+	dbBlogImg, err := DB.GetBlogImg(r.Context(), id)
+	if err != nil {
+		return types.BlogImg{}, err
+	}
+
+	blogImg := types.BlogImg{
+		ImgName: dbBlogImg.ImgName,
+		Img: dbBlogImg.Img,
+		BlogId: dbBlogImg.BlogID,
+	}
+
+	return blogImg, nil
+}
+
+func DeleteBlogImg(r *http.Request, id int32) (types.BlogImg, error) {
+	dbBlogImg, err := DB.DeleteBlogImg(r.Context(), id)
+	if err != nil {
+		return types.BlogImg{}, err
+	}
+
+	blogImg := types.BlogImg{
+		ImgName: dbBlogImg.ImgName,
+		Img: dbBlogImg.Img,
+		BlogId: dbBlogImg.BlogID,
+	}
+
+	return blogImg, nil
+}
+
+func GetBlogsByCreator(r *http.Request, userId int32) ([]types.Blog, error) {
+	dbBlogs, err := DB.GetBlogsByCreator(r.Context(), userId)
+	if err != nil {
+		return []types.Blog{}, err
+	}
+
+	blogs := []types.Blog{}
+	for _, b := range dbBlogs {
+		blog := types.Blog{}
+		blog.Id = b.BlogID
+		blog.Title = b.Title
+		blog.Excerpt = b.Excerpt
+		blog.IsPublished = b.IsPublished
+		blog.CreatedBy = b.Username
+		blog.CreatedAt = b.CreatedAt.Format("02 Jan 2006")
+		blogs = append(blogs, blog)
+	}
+
+	return blogs, nil
 }

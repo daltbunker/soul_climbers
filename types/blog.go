@@ -8,4 +8,5 @@ type Blog struct {
 	CreatedBy string `json:"createdBy"`
 	CreatedAt string `json:"createdAt"`
 	Id int32 `json:"id"`
+	ImgName string `json:"imgName"`
 }

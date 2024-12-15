@@ -1,0 +1,9 @@
+{{define "admin-blog-card"}}
+    <div class="card" style="padding-bottom: 2rem">
+        <a href="/admin/blog/preview/{{.Id}}">
+            <h2>{{.Title}} {{if not .IsPublished}}<span style="color: #ffee60">(Draft)</span>{{end}}</h2>
+        </a>
+        <span><i>{{.CreatedBy}}, {{.CreatedAt}}</i></span>
+        <p>{{.Excerpt}}</p>
+    </div>
+{{end}}

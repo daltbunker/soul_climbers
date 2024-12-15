@@ -27,9 +27,9 @@ func GetSession(r *http.Request) (*sessions.Session, error) {
 func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 
 	user := types.User{}
-	user.Email = r.FormValue("email")
-	user.Password = r.FormValue("password")
-	user.Username = r.FormValue("username")
+	user.Email = sanitize(r.FormValue("email"))
+	user.Password = sanitize(r.FormValue("password"))
+	user.Username = sanitize(r.FormValue("username"))
 
 	signupForm := types.SignupForm{}
 	signupForm.Email = user.Email
@@ -87,8 +87,8 @@ func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 	loginForm := types.LoginForm{}
 	user := types.User{}
-	user.Email = r.FormValue("email")
-	user.Password = r.FormValue("password")
+	user.Email = sanitize(r.FormValue("email"))
+	user.Password = sanitize(r.FormValue("password"))
 
 	dbUser, err := db.GetUserByEmail(r, user.Email)
 	if err != nil {
@@ -133,7 +133,7 @@ func newSession(r *http.Request, w http.ResponseWriter) error {
 }
 
 func HandleEmailResetLink(w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email")
+	email := sanitize(r.FormValue("email"))
 
 	_, err := db.GetUserByEmail(r, email)
 	if err != nil {

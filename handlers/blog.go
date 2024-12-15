@@ -1,23 +1,43 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/daltbunker/soul_climbers/db"
-	"github.com/daltbunker/soul_climbers/types"
+	"github.com/go-chi/chi"
 )
 
-func GetBlogs(w http.ResponseWriter, r *http.Request) []types.Blog {
-	blogs, err := db.GetAllBlogs(r)
+func GetBlogImg(w http.ResponseWriter, r *http.Request) {
+	paramId := chi.URLParam(r, "id")
+	paramImgName := chi.URLParam(r, "imgName")
+	id, err := strconv.Atoi(paramId)	
+
+	dbBlogImg, err := db.GetBlogImg(r, int32(id))
 	if err != nil {
 		HandleServerError(w, err)
+		return
 	}
-	return blogs
+	if dbBlogImg.ImgName != paramImgName {
+		HandleClientError(w, fmt.Errorf("Image '%v' not found", paramImgName))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Write(dbBlogImg.Img)
 }
 
-func HandleNewBlog(w http.ResponseWriter, r *http.Request) {
+func DeleteBlogImg(w http.ResponseWriter, r *http.Request)  {
+	paramId := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(paramId)	
 
-	//TODO: this method should publish a draft	
-	// fmt.Fprintf(w, "<h2>%s</h2> author %s <p>%s</p>", savedBlog.Title, savedBlog.CreatedBy, savedBlog.Body)
+	_, err = db.DeleteBlogImg(r, int32(id))
+	if err != nil {
+		HandleServerError(w, err)
+		return
+	}
+
+	fmt.Fprint(w, "<label for=\"thumbnail\">Thumbnail</label><input type=\"file\" name=\"thumbnail\" id=\"thumbnail\">")
 }
-
