@@ -1,9 +1,7 @@
 {{define "content"}}
 <h2>Login</h2>
-<form hx-post="/v1/login" hx-swap="innerHTML" novalidate>
+<form hx-post="/v1/login" hx-swap="innerHTML" novalidate class="form-fields">
     {{template "login" .}}
 </form>
 
-<a href="/signup">don't have an account?</a>
-<a href="/login/reset/email">forgot your password?</a>
 {{end}}

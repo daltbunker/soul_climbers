@@ -6,7 +6,7 @@ import (
 	"text/template"
 )
 
-func HandleServerError(w http.ResponseWriter, err error) {
+func HandleServerError(w http.ResponseWriter, r *http.Request, err error) {
 	if pages["serverError"] == nil {
 		var err error
 		pages["serverError"], err = template.ParseFiles(baseTemplate, "templates/pages/server-error.html")
@@ -16,13 +16,12 @@ func HandleServerError(w http.ResponseWriter, err error) {
 			return
 		}
 	}
-	// FIXME: returns error message and html, html doesn't render
 	w.WriteHeader(http.StatusInternalServerError)
 	log.Printf("internal server error: %v", err)
-	renderPage(pages["serverError"], w, nil)
+	renderPage(pages["serverError"], w, r, nil)
 }
 
-func HandleUnautorized(w http.ResponseWriter, err error) {
+func HandleUnautorized(w http.ResponseWriter, r *http.Request, authenticated bool) {
 	if pages["unauthorized"] == nil {
 		var err error
 		pages["unauthorized"], err = template.ParseFiles(baseTemplate, "templates/pages/unauthorized.html")
@@ -34,7 +33,7 @@ func HandleUnautorized(w http.ResponseWriter, err error) {
 	}
 	w.WriteHeader(http.StatusForbidden)
 	log.Printf("user unauthorized")
-	renderPage(pages["unauthorized"], w, nil)
+	renderPage(pages["unauthorized"], w, r, authenticated)
 }
 
 func HandleClientError(w http.ResponseWriter, err error) {

@@ -12,12 +12,11 @@
         <a href="/admin/blog/{{.Id}}">
             <button class="btn-secondary">edit</button>
         </a>
-        <form action="/admin/blog/{{.Id}}" method="post">
-            {{if .IsPublished}}
-            <button class="btn-primary disabled" disabled>publish</button>
-            {{else}}
-            <button class="btn-primary">publish</button>
-            {{end}}
-        </form>
+        {{if .IsPublished}}
+        <button class="btn-primary disabled" disabled>publish</button>
+        {{else}}
+        <button hx-post="/admin/blog/{{.Id}}" hx-target="#publish-info" hx-swap="outerHTML" class="btn-primary">publish</button>
+        <span id="publish-info" class="sub-text">*all fields are required</span>
+        {{end}}
     </div>
 {{end}}

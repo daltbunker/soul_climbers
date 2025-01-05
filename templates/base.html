@@ -10,11 +10,19 @@
 <body>
     <nav>
         <a href="/">Soul Climbers</a>
-        <a href="/admin">admin</a>
-        <!-- <a href="/login">login</a> -->
+        <div class="line-up">
+            {{if .User.Username}}
+                <a href="/account">account</a>
+            {{else}}
+                <a href="/login">login</a>
+            {{end}}
+            {{if eq .User.Role "admin"}}
+            <a href="/admin">admin</a>
+            {{end}}
+        </div>
     </nav>
     <div class="main-content">
-        {{template "content" .}}
+        {{template "content" .MainContent}}
     </div>
 </body>
 </html>

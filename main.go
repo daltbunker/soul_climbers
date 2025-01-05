@@ -5,9 +5,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/daltbunker/soul_climbers/db"
 	"github.com/daltbunker/soul_climbers/handlers"
+	"github.com/daltbunker/soul_climbers/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
@@ -77,19 +79,22 @@ func registerRoutes(r *chi.Mux) {
 		// r.Get("/login/reset/email", handlers.HandleGetResetEmail) // This is part of the password reset process, not to reset email
 		// r.Get("/login/reset/password", handlers.HandleGetResetPassword)
 		r.Get("/signup", handlers.HandleGetSignup)
+		r.Get("/blog/{id}", handlers.HandleGetBlog)
 
 		// data routes
 		r.Get("/v1/healthz", handlers.HandleGetHealth)
-		// r.Post("/v1/signup", handlers.HandleNewUser)
+		r.Post("/v1/signout", handlers.HandleSignOut)
+		r.Post("/v1/signup", handlers.HandleNewUser)
 		r.Post("/v1/login", handlers.HandleLoginUser)
 		// r.Post("/v1/login/reset/email", handlers.HandleEmailResetLink)
 		// r.Post("/v1/login/reset/password", handlers.HandlePasswordReset)
-		r.Get("/blog/{id}", handlers.HandleGetBlog)
+		r.Get("/v1/blog/{id}/{imgName}", handlers.GetBlogImg)
 	})
 
-	// protected
+	// protected (paths with "/admin" are restricted to admin role)
 	r.Group(func(r chi.Router) {
-		// r.Use(sessionMiddleware) TODO: commented out for testing only
+		r.Use(sessionMiddleware)
+		r.Get("/account", handlers.HandleGetAccount)
 		r.Get("/admin", handlers.HandleGetAdmin)
 		r.Get("/admin/blog", handlers.HandleGetBlogForm)
 		r.Get("/admin/blog/{id}", handlers.HandleGetBlogForm)
@@ -97,21 +102,40 @@ func registerRoutes(r *chi.Mux) {
 		r.Post("/admin/blog/preview/{id}", handlers.HandleUpdateBlogPreview) // HTML forms only allow GET and POST
 		r.Post("/admin/blog/preview", handlers.HandleNewBlogPreview)
 		r.Post("/admin/blog/{id}", handlers.HandlePublishBlog) // HTML forms only allow GET and POST
-		r.Get("/v1/blog/{id}/{imgName}", handlers.GetBlogImg)
-		r.Delete("/v1/blog/{id}/thumbnail", handlers.DeleteBlogImg)
+		r.Get("/v1/admin/blog/{id}/{imgName}", handlers.GetBlogImg)
+		r.Delete("/v1/admin/blog/{id}/thumbnail", handlers.DeleteBlogImg)
 	})
 }
 
 func sessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mode := os.Getenv("MODE")
+		if mode == "" {
+			log.Fatal("MODE not found in env")
+		}
+		if mode == "dev" {
+			handlers.NewDevSession(w, r)
+		}
+
 		session, err := handlers.GetSession(r)
 		if err != nil {
-			handlers.HandleServerError(w, err)
+			handlers.HandleServerError(w, r, err)
 			return
 		}
 
 		if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-			handlers.HandleUnautorized(w, err)
+			handlers.HandleUnautorized(w, r, false)
+			return
+		}
+
+		match, err := regexp.MatchString("/admin",  r.URL.Path)
+		if err != nil {
+			handlers.HandleServerError(w, r, err)
+			return
+		}
+
+		if match && session.Values["role"].(string) != string(utils.Admin) {
+			handlers.HandleUnautorized(w, r, true)
 			return
 		}
 

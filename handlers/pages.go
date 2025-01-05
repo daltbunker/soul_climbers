@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 
@@ -23,19 +24,19 @@ func HandleGetHome(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["home"], err = template.ParseFiles(baseTemplate, "templates/pages/home.html", "templates/components/blog-card.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
 
 	blogs, err := db.GetAllBlogs(r)
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 	d := types.Home{Blogs: blogs}
 
-	renderPage(pages["home"], w, d)
+	renderPage(pages["home"], w, r, d)
 }
 
 func HandleGetLogin(w http.ResponseWriter, r *http.Request) {
@@ -43,11 +44,11 @@ func HandleGetLogin(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["login"], err = template.ParseFiles(baseTemplate, "templates/pages/login.html", "templates/components/login.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
-	renderPage(pages["login"], w, types.LoginForm{})
+	renderPage(pages["login"], w, r, types.LoginForm{})
 }
 
 func HandleGetSignup(w http.ResponseWriter, r *http.Request) {
@@ -55,11 +56,37 @@ func HandleGetSignup(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["signup"], err = template.ParseFiles(baseTemplate, "templates/pages/signup.html", "templates/components/signup.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
-	renderPage(pages["signup"], w, types.SignupForm{})
+	renderPage(pages["signup"], w, r, types.SignupForm{})
+}
+
+func HandleGetAccount(w http.ResponseWriter, r *http.Request) {
+	if pages["account"] == nil {
+		var err error
+		pages["account"], err = template.ParseFiles(baseTemplate, "templates/pages/account.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+	user := types.User{} 
+	session, err := GetSession(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
+		user.Username = session.Values["username"].(string)
+		user.Email = session.Values["email"].(string)
+		user.Role = session.Values["role"].(string)
+	}
+	err = pages["account"].Execute(w, types.Base{MainContent: user, User: user})
+	if err != nil {
+		HandleServerError(w, r, err)
+	}
 }
 
 func HandleGetResetEmail(w http.ResponseWriter, r *http.Request) {
@@ -67,11 +94,11 @@ func HandleGetResetEmail(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["resetEmail"], err = template.ParseFiles(baseTemplate, "templates/pages/reset-email.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
-	renderPage(pages["resetEmail"], w, nil)
+	renderPage(pages["resetEmail"], w, r, nil)
 }
 
 func HandleGetResetPassword(w http.ResponseWriter, r *http.Request) {
@@ -101,11 +128,11 @@ func HandleGetResetPassword(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["resetPassword"], err = template.ParseFiles(baseTemplate, "templates/pages/reset-password.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
-	renderPage(pages["resetPassword"], w, nil)
+	renderPage(pages["resetPassword"], w, r, nil)
 }
 
 func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +140,7 @@ func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["blog"], err = template.ParseFiles(baseTemplate, "templates/pages/blog.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
@@ -127,11 +154,11 @@ func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 
 	blog, err := db.GetBlogById(r, int32(id))
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 
-	renderPage(pages["blog"], w, blog)
+	renderPage(pages["blog"], w, r, blog)
 }
 
 func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +166,7 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["blogForm"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-form.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
@@ -150,7 +177,7 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 			FormAction: "/admin/blog/preview",
 			FormMethod: "post",
 		}
-		renderPage(pages["blogForm"], w, blogForm)
+		renderPage(pages["blogForm"], w, r, blogForm)
 		return
 	}
 
@@ -163,7 +190,7 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 
 	blog, err := db.GetBlogById(r, int32(id))
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}	
 	
@@ -177,7 +204,7 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 		FormMethod: "post",
 	}
 
-	renderPage(pages["blogForm"], w, blogForm)
+	renderPage(pages["blogForm"], w, r, blogForm)
 }
 
 func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
@@ -186,7 +213,7 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
@@ -200,11 +227,11 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	blog, err := db.GetBlogById(r, int32(id))
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 
-	renderPage(pages["blogPreview"], w, blog)	
+	renderPage(pages["blogPreview"], w, r, blog)	
 }
 
 func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
@@ -230,7 +257,7 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, thumbnail); err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 
@@ -242,7 +269,7 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.NewBlogImg(r, newBlogImg)
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 
@@ -250,7 +277,7 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
@@ -286,7 +313,7 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 		buf := bytes.NewBuffer(nil)
 		if _, err := io.Copy(buf, thumbnail); err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 
@@ -298,7 +325,7 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 		_, err = db.NewBlogImg(r, newBlogImg)
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
@@ -307,7 +334,7 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
@@ -322,9 +349,28 @@ func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 
 	blog, err := db.GetBlogById(r, int32(id))
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
+
+    var missingFields []string
+    if blog.ImgName == "" {
+        missingFields = append(missingFields, "image")
+    }
+    if blog.Title == "" {
+        missingFields = append(missingFields, "title")
+    }
+    if blog.Excerpt == "" {
+        missingFields = append(missingFields, "excerpt")
+    }
+    if blog.Body == "" {
+        missingFields = append(missingFields, "body")
+    }
+
+    if len(missingFields) > 0 {
+        fmt.Fprintf(w, "<span class=\"sub-text warning\">*missing fields: %v</span>", strings.Join(missingFields, ", "))
+        return
+    }
 
 	updatedBlog := blog
 	updatedBlog.IsPublished = true
@@ -335,7 +381,7 @@ func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+	w.Header().Set("HX-Redirect", "/admin")
 }
 
 func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
@@ -343,20 +389,20 @@ func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
 		var err error
 		pages["admin"], err = template.ParseFiles(baseTemplate, "templates/pages/admin.html", "templates/components/admin-blog-card.html")
 		if err != nil {
-			HandleServerError(w, err)
+			HandleServerError(w, r, err)
 			return
 		}
 	}
 
     blogs, err := db.GetBlogsByCreator(r, 1) //TODO: don't hardcode userId 
     if err != nil {
-        HandleServerError(w, err)
+        HandleServerError(w, r, err)
         return
     }
 
 	d := types.Admin{Blogs: blogs}
 
-	renderPage(pages["admin"], w, d)
+	renderPage(pages["admin"], w, r, d)
 }
 
 func setCookie(w http.ResponseWriter, name string, value string) {

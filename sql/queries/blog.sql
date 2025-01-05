@@ -13,10 +13,12 @@ LEFT JOIN blog_img bi
 WHERE b.blog_id = $1;
 
 -- name: GetAllBlogs :many
-SELECT b.blog_id, b.title, b.body, b.excerpt, b.is_published, b.created_at, u.username
+SELECT b.blog_id, b.title, b.body, b.excerpt, b.is_published, b.created_at, u.username, bi.img_name
 FROM blog b
 INNER JOIN users u
     ON b.created_by = u.users_id
+LEFT JOIN blog_img bi
+    ON b.blog_id = bi.blog_id
 WHERE b.is_published = TRUE;
 
 -- name: UpdateBlog :one

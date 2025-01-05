@@ -1,4 +1,11 @@
 {{define "content"}}
+<div class="stack">
     <img src="/static/unauthorized.jpg" style="width: 50vw" alt="">
-    <a href="/login">Login to continue...</a>
+    <a href="/login">
+        <!-- don't show log in button if role issue and user is already logged in -->
+        {{if eq . false}}
+            <button class="btn-primary">Log in to continue...</button>
+        {{end}}
+    </a>
+</div>
 {{end}}

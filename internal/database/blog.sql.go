@@ -104,10 +104,12 @@ func (q *Queries) DeleteBlogImg(ctx context.Context, blogID int32) (BlogImg, err
 }
 
 const getAllBlogs = `-- name: GetAllBlogs :many
-SELECT b.blog_id, b.title, b.body, b.excerpt, b.is_published, b.created_at, u.username
+SELECT b.blog_id, b.title, b.body, b.excerpt, b.is_published, b.created_at, u.username, bi.img_name
 FROM blog b
 INNER JOIN users u
     ON b.created_by = u.users_id
+LEFT JOIN blog_img bi
+    ON b.blog_id = bi.blog_id
 WHERE b.is_published = TRUE
 `
 
@@ -119,6 +121,7 @@ type GetAllBlogsRow struct {
 	IsPublished bool
 	CreatedAt   time.Time
 	Username    string
+	ImgName     sql.NullString
 }
 
 func (q *Queries) GetAllBlogs(ctx context.Context) ([]GetAllBlogsRow, error) {
@@ -138,6 +141,7 @@ func (q *Queries) GetAllBlogs(ctx context.Context) ([]GetAllBlogsRow, error) {
 			&i.IsPublished,
 			&i.CreatedAt,
 			&i.Username,
+			&i.ImgName,
 		); err != nil {
 			return nil, err
 		}

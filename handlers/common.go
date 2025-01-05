@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"text/template"
 
-    "github.com/microcosm-cc/bluemonday"
+	"github.com/daltbunker/soul_climbers/types"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 var pages map[string]*template.Template
@@ -22,14 +23,26 @@ func GetPage(w http.ResponseWriter, name string) (*template.Template, error) {
 	return pages[name], nil
 }
 
-func renderPage(t *template.Template, w http.ResponseWriter, data interface{}) {
-	err := t.Execute(w, data)
+func renderPage(t *template.Template, w http.ResponseWriter, r *http.Request, data interface{}) {
+	user := types.User{} 
+	session, err := GetSession(r)
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
+		return
+	}
+	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
+		user.Username = session.Values["email"].(string)
+		user.Email = session.Values["username"].(string)
+		user.Role = session.Values["role"].(string)
+	}
+
+	err = t.Execute(w, types.Base{MainContent: data, User: user})
+	if err != nil {
+		HandleServerError(w, r, err)
 	}
 }
 
-func renderComponent(w http.ResponseWriter, page string, name string, data interface{}) {
+func renderComponent(w http.ResponseWriter, r *http.Request, page string, name string, data interface{}) {
 	t, err := GetPage(w, page)
 	if err != nil {
 		log.Print(err.Error())
@@ -38,7 +51,7 @@ func renderComponent(w http.ResponseWriter, page string, name string, data inter
 
 	err = t.ExecuteTemplate(w, name, data)
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 	}
 }
 

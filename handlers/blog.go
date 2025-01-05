@@ -16,7 +16,7 @@ func GetBlogImg(w http.ResponseWriter, r *http.Request) {
 
 	dbBlogImg, err := db.GetBlogImg(r, int32(id))
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 	if dbBlogImg.ImgName != paramImgName {
@@ -35,7 +35,7 @@ func DeleteBlogImg(w http.ResponseWriter, r *http.Request)  {
 
 	_, err = db.DeleteBlogImg(r, int32(id))
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 

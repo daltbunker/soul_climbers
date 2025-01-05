@@ -1,8 +1,6 @@
 {{define "content"}}
 <h2>Signup</h2>
-<form hx-post="/v1/signup" hx-swap="innerHTML" novalidate>
+<form hx-post="/v1/signup" hx-swap="innerHTML" class="form-fields" novalidate>
     {{template "signup" .}}
 </form>
-
-<a href="/login">already a user?</a>
 {{end}}

@@ -1,31 +1,38 @@
 {{define "signup"}}
-<form hx-post="/v1/signup">
-    <div hx-target="this" hx-swap="outerHTML">
-        <label for="email">email:</label>
-        <input type="email" value="{{.Email}}" name="email" id="email" required>
+<div hx-target="this" hx-swap="outerHTML" class="input-container">
+    <label for="email">email:</label>
+    <div>
+        <input class="med-input" type="email" value="{{.Email}}" name="email" id="email" maxlength="30" required>
         {{if .EmailError}}
-        <span class="error">{{.EmailError}}</span>
+        <span class="warning">{{.EmailError}}</span>
         {{end}}
     </div>
+</div>
 
-    <div hx-target="this" hx-swap="outerHTML">
-        <label for="username">username:</label>
-        <input type="username" value="{{.Username}}" name="username" id="username" required>
+<div hx-target="this" hx-swap="outerHTML" class="input-container">
+    <label for="username">username:</label>
+    <div>
+        <input class="med-input" type="username" value="{{.Username}}" name="username" maxlength="30" id="username" required>
         {{if .UsernameError}}
-        <span class="error">{{.UsernameError}}</span>
+        <span class="warning">{{.UsernameError}}</span>
         {{end}}
     </div>
+</div>
 
-    <div hx-target="this" hx-swap="outerHTML">
-        <label for="password">password:</label>
-        <input type="password" value="{{.Password}}" name="password" id="password" required>
+<div hx-target="this" hx-swap="outerHTML" class="input-container">
+    <label for="password">password:</label>
+    <div>
+        <input class="med-input" type="password" value="{{.Password}}" name="password" maxlength="30" id="password" required>
         {{if .PasswordError}}
-        <span class="error">{{.PasswordError}}</span>
+        <span class="warning">{{.PasswordError}}</span>
         {{else}}
-        <span>minimum eight characters, at least one letter, one number and one special character</span>
+        <span style="font-size: 0.8rem;">minimum eight characters, at least one letter, one number, and one special character</span>
         {{end}}
     </div>
+</div>
 
-    <button>Sign Up</button>
-</form>
+<div class="line-up">
+    <button class="btn-primary">Sign Up</button>
+    <a href="/login" class="btn-tertiary">already a user?</a>
+</div>
 {{end}}

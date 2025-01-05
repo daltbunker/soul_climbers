@@ -1,0 +1,10 @@
+{{define "content"}}
+    <h2>Account</h2>
+    <div class="stack">
+        <div>Email: {{.Email}}</div>
+        <div>Username: {{.Username}}</div>
+        <div>
+            <button class="btn-primary" hx-post="/v1/signout">Sign Out</button>
+        </div>
+    </div>
+{{end}}

@@ -8,7 +8,7 @@
                 <div>Thumbnail:</div>
                 <span>
                     {{.ImgName}}
-                    <button title="Delete file" class="btn-x" type="button" hx-delete="/v1/blog/{{.Id}}/thumbnail" hx-target="#file-container">&times;</button>
+                    <button title="Delete file" class="btn-x" type="button" hx-delete="/v1/admin/blog/{{.Id}}/thumbnail" hx-target="#file-container">&times;</button>
                 </span>
             </div>
         {{else}}

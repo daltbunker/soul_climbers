@@ -15,6 +15,7 @@ import (
 )
 
 var store *sessions.CookieStore
+var user types.User
 
 func Init(key string) {
 	store = sessions.NewCookieStore([]byte(key))
@@ -22,6 +23,10 @@ func Init(key string) {
 
 func GetSession(r *http.Request) (*sessions.Session, error) {
 	return store.Get(r, "session")
+}
+
+func NewDevSession(w http.ResponseWriter, r *http.Request) {
+	newSession(r, w, types.User{Username: "Wayne", Email: "wayne_ker@aol.com", Role: "admin"})	
 }
 
 func HandleNewUser(w http.ResponseWriter, r *http.Request) {
@@ -52,11 +57,12 @@ func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isValidPassword(user.Password) {
-		signupForm.PasswordError = "minimum eight characters, at least one letter, one number and one special character"
+		// TODO: return why password is invalid
+		signupForm.PasswordError = "minimum eight characters, at least one letter, one number, and one special character"
 	}
 
 	if signupForm.EmailError != "" || signupForm.UsernameError != "" || signupForm.PasswordError != "" {
-		renderComponent(w, "signup", "signup", signupForm)
+		renderComponent(w, r, "signup", "signup", signupForm)
 		return
 	}
 
@@ -75,13 +81,13 @@ func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = newSession(r, w)
+	err = newSession(r, w, dbUser)
 	if err != nil {
 		HandleClientError(w, err)
 		return
 	}
 
-	fmt.Fprintf(w, "Welcome %s", dbUser.Username)
+	w.Header().Set("HX-Redirect", "/")
 }
 
 func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +101,7 @@ func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed getting user from DB: %v", err)
 		loginForm.Email = user.Email
 		loginForm.EmailError = "email not found"
-		renderComponent(w, "login", "login", loginForm)
+		renderComponent(w, r, "login", "login", loginForm)
 		return
 	}
 
@@ -104,26 +110,29 @@ func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed checking password: %v", err)
 		loginForm.Email = user.Email
 		loginForm.PasswordError = "password is incorrect"
-		renderComponent(w, "login", "login", loginForm)
+		renderComponent(w, r, "login", "login", loginForm)
 		return
 	}
 
-	err = newSession(r, w)
+	err = newSession(r, w, dbUser)
 	if err != nil {
 		log.Printf("issue creating session: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	fmt.Fprintf(w, "Welcome %s, <a href=\"admin/blog\">Create Blog</a>", dbUser.Username)
+	w.Header().Set("HX-Redirect", "/")
 }
 
-func newSession(r *http.Request, w http.ResponseWriter) error {
+func newSession(r *http.Request, w http.ResponseWriter, user types.User) error {
 	session, err := store.Get(r, "session")
 	if err != nil {
 		return err
 	}
 	session.Values["authenticated"] = true
+	session.Values["email"] = user.Email
+	session.Values["username"] = user.Username
+	session.Values["role"] = user.Role
 	session.Options.MaxAge = 30
 	err = session.Save(r, w)
 	if err != nil {
@@ -145,7 +154,7 @@ func HandleEmailResetLink(w http.ResponseWriter, r *http.Request) {
 
 	resetToken, err := db.NewResetToken(r, email)	
 	if err != nil {
-		HandleServerError(w, err)
+		HandleServerError(w, r, err)
 		return
 	}
 	fmt.Println(resetToken)
@@ -153,6 +162,22 @@ func HandleEmailResetLink(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Email successfuly sent to: %s", email)
 	// TODO: this should be the link sent to the email
 	// resetUrl := fmt.Sprintf("/login/reset/password?token=%s",  resetToken.Token)
+}
+
+func HandleSignOut(w http.ResponseWriter, r *http.Request) {
+	session, err := GetSession(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	session.Options.MaxAge = -1
+	err = session.Save(r, w)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	w.Header().Set("HX-Redirect", "/login")
 }
 
 func HandlePasswordReset(w http.ResponseWriter, r *http.Request) {

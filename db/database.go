@@ -35,6 +35,7 @@ func NewUser(r *http.Request, user types.User) (types.User, error) {
 	newUser := types.User{
 		Username: dbUser.Username,
 		Email:    dbUser.Email,
+		Role: 	  dbUser.Role,
 	}
 
 	return newUser, nil
@@ -50,6 +51,7 @@ func GetUserByEmail(r *http.Request, email string) (types.User, error) {
 		Username: dbUser.Username,
 		Email:    dbUser.Email,
 		Password: dbUser.Password,
+		Role:	  dbUser.Role,
 	}
 
 	return user, nil
@@ -65,6 +67,7 @@ func GetUserByUsername(r *http.Request, username string) (types.User, error) {
 		Username: dbUser.Username,
 		Email:    dbUser.Email,
 		Password: dbUser.Password,
+		Role: 	  dbUser.Role,
 	}
 
 	return user, nil
@@ -175,6 +178,7 @@ func GetAllBlogs(r *http.Request) ([]types.Blog, error) {
 		blog.Title = b.Title
 		blog.Excerpt = b.Excerpt
 		blog.IsPublished = b.IsPublished
+		blog.ImgName = b.ImgName.String
 		blog.CreatedBy = b.Username
 		blog.CreatedAt = b.CreatedAt.Format("02 Jan 2006")
 		blogs = append(blogs, blog)
