@@ -10,24 +10,11 @@ import (
 
 	"github.com/daltbunker/soul_climbers/db"
 	"github.com/daltbunker/soul_climbers/types"
-	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var store *sessions.CookieStore
 var user types.User
 
-func Init(key string) {
-	store = sessions.NewCookieStore([]byte(key))
-}
-
-func GetSession(r *http.Request) (*sessions.Session, error) {
-	return store.Get(r, "session")
-}
-
-func NewDevSession(w http.ResponseWriter, r *http.Request) {
-	newSession(r, w, types.User{Username: "Wayne", Email: "wayne_ker@aol.com", Role: "admin"})	
-}
 
 func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 
@@ -81,7 +68,7 @@ func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = newSession(r, w, dbUser)
+	err = NewSession(r, w, dbUser)
 	if err != nil {
 		HandleClientError(w, err)
 		return
@@ -114,7 +101,7 @@ func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = newSession(r, w, dbUser)
+	err = NewSession(r, w, dbUser)
 	if err != nil {
 		log.Printf("issue creating session: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -122,23 +109,6 @@ func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Redirect", "/")
-}
-
-func newSession(r *http.Request, w http.ResponseWriter, user types.User) error {
-	session, err := store.Get(r, "session")
-	if err != nil {
-		return err
-	}
-	session.Values["authenticated"] = true
-	session.Values["email"] = user.Email
-	session.Values["username"] = user.Username
-	session.Values["role"] = user.Role
-	session.Options.MaxAge = 30
-	err = session.Save(r, w)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func HandleEmailResetLink(w http.ResponseWriter, r *http.Request) {

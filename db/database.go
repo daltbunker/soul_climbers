@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -14,10 +15,12 @@ import (
 
 var DB *database.Queries
 
-func InitDatabase(dbURL string) error {
+func InitDatabase(dbURL string) {
 	conn, err := sql.Open("postgres", dbURL)
 	DB = database.New(conn)
-	return err
+	if err != nil {
+		log.Fatalf("Failed to init DB: %v", err)
+	}
 }
 
 func NewUser(r *http.Request, user types.User) (types.User, error) {
