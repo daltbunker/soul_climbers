@@ -1,0 +1,14 @@
+{{define "checkbox-input"}}
+<div class="input-container">
+    <fieldset>
+        <legend id="q-{{.Id}}">{{.Label}}</legend>
+        {{$id := .Id}}
+        {{range $index, $answer := .Answers}}
+            <div>
+                <input name="q-{{$.Id}}-{{$index}}" id="q-{{$.Id}}-{{$index}}" type="checkbox" value="{{$answer.Value}}">
+                <label for="q-{{$.Id}}-{{$index}}">{{$answer.Text}}</label>
+            </div>
+        {{end}}
+    </fieldset>
+</div>
+{{end}}

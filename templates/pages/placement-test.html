@@ -1,0 +1,67 @@
+
+{{define "content"}}
+<h2>Soul Climber Placement Test</h2>
+<div id="placement-test">
+    <div style="margin-bottom: 2rem;">
+        <h3>Pre-Test Guidelines/Tips</h3>
+        <ul>
+            <li>These questions are not of men nor of man, but of me</li>
+            <li>Wo unto the liar, for he shall be thrust down to Boulder Colorado and get added to our <a
+                    style="text-decoration: underline;" href="https://www.8a.nu" target="_blank" rel="noopener noreferrer">public offenders page</a></li>
+            <li>Take a deep breath, feel it rise and fall from the 1st sphincter all the way down to the 7th, and may your soul
+                guide you to the truth</li>
+        </ul>
+    </div>
+    <form hx-post="/v1/placement-test" hx-target="#placement-test" class="form-fields" novalidate>
+        {{range $selectQuestion:= .SelectQuestions}} 
+            {{template "select-input" $selectQuestion}}
+        {{end}}
+        {{range $checkboxQuestion := .CheckboxQuestions}} 
+            {{template "checkbox-input" $checkboxQuestion }}
+        {{end}}
+        <div class="line-up">
+            <button class="btn-primary">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const f = document.forms[0];
+    f.addEventListener('htmx:beforeRequest', e => {
+        document.querySelectorAll('.warning').forEach(e => e.remove());
+        let checkboxQuestions = {};
+        let firstErrorId = '';
+        Array.from(f.elements).forEach((input) => {
+            if (input.type === "select-one" && !input.value) {
+                if (!firstErrorId) {
+                    firstErrorId = input.id;
+                }
+                let elem = document.getElementById(input.id + "-label");
+                elem.innerHTML = elem.textContent + `<span class="warning">*required</span>`;
+            } else if (input.type === "checkbox") {
+                const id = input.id.split('-')[1]
+                if (!checkboxQuestions.hasOwnProperty(id)) {
+                    checkboxQuestions[id] = false;
+                }
+                if (input.checked) {
+                    checkboxQuestions[id] = true;
+                }
+            }
+        });
+        for (let k of Object.keys(checkboxQuestions)) {
+            if (!checkboxQuestions[k]) {
+                if (!firstErrorId) {
+                    firstErrorId = `q-${k}`;
+                }
+                let elem = document.getElementById(`q-${k}`);
+                elem.innerHTML = elem.textContent + `<span class="warning">*required</span>`;
+            }
+        }
+        if (firstErrorId) {
+            e.preventDefault();
+            document.getElementById(firstErrorId).scrollIntoView({ behavior: 'smooth', block: 'center' })
+            firstErrorId = '';
+        }
+    })
+</script>
+{{end}}

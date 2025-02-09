@@ -6,6 +6,5 @@ type BlogForm struct {
 	Title string
 	Excerpt string
 	ImgName string
-	FormAction string
-	FormMethod string
+	RequestURL string
 }

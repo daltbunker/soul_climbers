@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/daltbunker/soul_climbers/internal/database"
@@ -39,6 +41,7 @@ func NewUser(r *http.Request, user types.User) (types.User, error) {
 		Username: dbUser.Username,
 		Email:    dbUser.Email,
 		Role: 	  dbUser.Role,
+		SoulScore: dbUser.SoulScore,
 	}
 
 	return newUser, nil
@@ -55,6 +58,7 @@ func GetUserByEmail(r *http.Request, email string) (types.User, error) {
 		Email:    dbUser.Email,
 		Password: dbUser.Password,
 		Role:	  dbUser.Role,
+		SoulScore: dbUser.SoulScore,
 	}
 
 	return user, nil
@@ -71,6 +75,7 @@ func GetUserByUsername(r *http.Request, username string) (types.User, error) {
 		Email:    dbUser.Email,
 		Password: dbUser.Password,
 		Role: 	  dbUser.Role,
+		SoulScore: dbUser.SoulScore,
 	}
 
 	return user, nil
@@ -209,6 +214,22 @@ func GetBlogById(r *http.Request, id int32) (types.Blog, error) {
 	return blog, nil
 }
 
+func GetBlogByTitle(r *http.Request, title string) (types.Blog, error) {
+	dbBlog, err := DB.GetBlogByTitle(r.Context(), title)
+	if err != nil {
+		return types.Blog{}, err
+	}
+
+	blog := types.Blog{}
+	blog.Title = dbBlog.Title
+	blog.Id = dbBlog.BlogID
+	blog.Excerpt = dbBlog.Excerpt
+	blog.Body = string(dbBlog.Body)
+	blog.IsPublished = dbBlog.IsPublished
+
+	return blog, nil
+}
+
 func NewBlogImg(r *http.Request, blogImg types.BlogImg) (types.BlogImg, error) {
 	dbBlogImg, err := DB.CreateBlogImg(r.Context(), database.CreateBlogImgParams{
 		ImgName: blogImg.ImgName,
@@ -263,8 +284,13 @@ func DeleteBlogImg(r *http.Request, id int32) (types.BlogImg, error) {
 	return blogImg, nil
 }
 
-func GetBlogsByCreator(r *http.Request, userId int32) ([]types.Blog, error) {
-	dbBlogs, err := DB.GetBlogsByCreator(r.Context(), userId)
+func GetBlogsByCreator(r *http.Request, username string) ([]types.Blog, error) {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return []types.Blog{}, err
+	}
+
+	dbBlogs, err := DB.GetBlogsByCreator(r.Context(), user.UsersID)
 	if err != nil {
 		return []types.Blog{}, err
 	}
@@ -282,4 +308,66 @@ func GetBlogsByCreator(r *http.Request, userId int32) ([]types.Blog, error) {
 	}
 
 	return blogs, nil
+}
+
+func GetPlacementTestQuestions(r *http.Request) ([]types.Question, error) {
+    dbQuestions, err := DB.GetTestQuestions(r.Context())
+    if err != nil {
+        return []types.Question{}, err
+    }
+
+    questions := []types.Question{}
+    for _, q := range dbQuestions {
+        question := types.Question{}
+        question.Id = strconv.Itoa(int(q.TestQuestionID))
+        question.InputType = q.InputType
+        question.Text = q.QuestionText
+        question.Answers = strings.Split(q.Answers, ",")
+        question.AnswerPoints = strings.Split(q.AnswerPoints, ",")
+		question.PossiblePoints = int(q.Points)
+        questions = append(questions, question)
+    }
+
+    return questions, nil
+}
+
+//TODO: change userId to username because that's what is in Session
+func InsertPlacementTest(r *http.Request, username string, score int32) error {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return err
+	}
+
+	_, err = DB.InsertPlacmentTest(r.Context(), database.InsertPlacmentTestParams{
+		UserID: user.UsersID,
+		Score: score,
+		CreatedAt: time.Now().UTC(),	
+		UpdatedAt: time.Now().UTC(),	
+	})
+
+	return err
+}
+
+func GetPlacementTest(r *http.Request, username string) (int32, error) {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return 0, err
+	}
+
+	dbPlacementTest, err := DB.GetPlacementTest(r.Context(), user.UsersID)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	return dbPlacementTest, err
+}
+
+func SetUserSoulScore (r *http.Request, username string, soulScore int32) (int32, error) {
+	dbUserSoulScore, err := DB.SetUserSoulScore(r.Context(), database.SetUserSoulScoreParams{
+		SoulScore: soulScore,
+		Username: username,
+	})
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	return dbUserSoulScore.SoulScore, err
 }

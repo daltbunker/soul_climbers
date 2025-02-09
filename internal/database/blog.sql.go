@@ -193,6 +193,28 @@ func (q *Queries) GetBlogById(ctx context.Context, blogID int32) (GetBlogByIdRow
 	return i, err
 }
 
+const getBlogByTitle = `-- name: GetBlogByTitle :one
+SELECT blog_id, body, title, excerpt, is_published, created_by, created_at, updated_at
+FROM blog b
+WHERE b.title = $1
+`
+
+func (q *Queries) GetBlogByTitle(ctx context.Context, title string) (Blog, error) {
+	row := q.db.QueryRowContext(ctx, getBlogByTitle, title)
+	var i Blog
+	err := row.Scan(
+		&i.BlogID,
+		&i.Body,
+		&i.Title,
+		&i.Excerpt,
+		&i.IsPublished,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getBlogImg = `-- name: GetBlogImg :one
 SELECT img_name, img, blog_id
 FROM blog_img

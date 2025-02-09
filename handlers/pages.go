@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -72,21 +73,12 @@ func HandleGetAccount(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	user := types.User{} 
-	session, err := GetSession(r)
+	user, err := GetSessionUser(r)
 	if err != nil {
 		HandleServerError(w, r, err)
 		return
 	}
-	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
-		user.Username = session.Values["username"].(string)
-		user.Email = session.Values["email"].(string)
-		user.Role = session.Values["role"].(string)
-	}
-	err = pages["account"].Execute(w, types.Base{MainContent: user, User: user})
-	if err != nil {
-		HandleServerError(w, r, err)
-	}
+	renderPage(pages["account"], w, r, user)
 }
 
 func HandleGetResetEmail(w http.ResponseWriter, r *http.Request) {
@@ -148,11 +140,16 @@ func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		log.Printf("Blog id must be type int: %v", err)
-		HandleClientError(w, err)
+		HandleNotFound(w, r)
 		return
 	}
 
 	blog, err := db.GetBlogById(r, int32(id))
+	if err == sql.ErrNoRows {
+		log.Printf("No data found for blog with id: %v", id)
+		HandleNotFound(w, r)
+		return
+	}
 	if err != nil {
 		HandleServerError(w, r, err)
 		return
@@ -174,8 +171,7 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 	paramId := chi.URLParam(r, "id")
 	if paramId == ""{
 		blogForm := types.BlogForm {
-			FormAction: "/admin/blog/preview",
-			FormMethod: "post",
+			RequestURL: "/admin/blog/preview",
 		}
 		renderPage(pages["blogForm"], w, r, blogForm)
 		return
@@ -184,7 +180,7 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(paramId)	
 	if err != nil {
 		log.Printf("Blog id must be type int: %v", err)
-		HandleClientError(w, err)
+		HandleNotFound(w, r)
 		return
 	}
 
@@ -200,8 +196,7 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 		Title: blog.Title,
 		Excerpt: blog.Excerpt,
 		ImgName: blog.ImgName, 
-		FormAction: "/admin/blog/preview/" + paramId,
-		FormMethod: "post",
+		RequestURL: "/admin/blog/preview/" + paramId,
 	}
 
 	renderPage(pages["blogForm"], w, r, blogForm)
@@ -221,7 +216,7 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		log.Printf("Blog id must be type int: %v", err)
-		HandleClientError(w, err)
+		HandleNotFound(w, r)
 		return
 	}
 
@@ -235,42 +230,65 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
+	sessionUser, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
 	newBlog := types.Blog{}
 	newBlog.Title = sanitize(r.FormValue("title"))
 	newBlog.Body = sanitize(r.FormValue("body"))
 	newBlog.Excerpt= sanitize(r.FormValue("excerpt"))
 	newBlog.IsPublished = false
-	newBlog.CreatedBy = "jonnyX"
+	newBlog.CreatedBy = sessionUser.Username
+
+	hasUniqueTitle, err := hasUniqueTitle(r, newBlog.Title, -1)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	if !hasUniqueTitle {
+		HandleClientError(w, fmt.Errorf("title '%v' is already taken", newBlog.Title))
+		return
+	}
+
+	// File(and all other parameters) are optional for preview
+	hasFile := true 
+	thumbnail, header, err := r.FormFile("thumbnail") 
+	if err == http.ErrMissingFile {
+		hasFile = false 
+	} else if err != nil {
+		HandleClientError(w, err)
+		return
+	}
 
 	blog, err := db.NewBlog(r, newBlog)
 	if err != nil {
-		HandleClientError(w, err)
-		return
-	}
-
-	thumbnail, header, err := r.FormFile("thumbnail") 
-	if err != nil {
-		HandleClientError(w, err)
-		return
-	}
-	defer thumbnail.Close()
-
-	buf := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buf, thumbnail); err != nil {
 		HandleServerError(w, r, err)
 		return
 	}
 
-	newBlogImg := types.BlogImg{
-		ImgName: header.Filename,
-		Img: buf.Bytes(),
-		BlogId: blog.Id,
-	} 
+	if hasFile {
+		defer thumbnail.Close()
 
-	_, err = db.NewBlogImg(r, newBlogImg)
-	if err != nil {
-		HandleServerError(w, r, err)
-		return
+		buf := bytes.NewBuffer(nil)
+		if _, err := io.Copy(buf, thumbnail); err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+
+		newBlogImg := types.BlogImg{
+			ImgName: header.Filename,
+			Img: buf.Bytes(),
+			BlogId: blog.Id,
+		} 
+
+		_, err = db.NewBlogImg(r, newBlogImg)
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
 	}
 
 	if pages["blogPreview"] == nil {
@@ -282,13 +300,18 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
-	http.Redirect(w, r, "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)), http.StatusSeeOther)
+
+	w.Header().Set("HX-Redirect", "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)))
 }
 
 func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	paramId := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(paramId)	
+	if err != nil {
+		HandleClientError(w, err)
+		return
+	}
 
 	updatedBlog := types.Blog{}
 	updatedBlog.Id = int32(id)
@@ -297,18 +320,32 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 	updatedBlog.Excerpt= sanitize(r.FormValue("excerpt"))
 	updatedBlog.IsPublished = false
 
-	blog, err := db.UpdateBlog(r, updatedBlog)
+	hasUniqueTitle, err := hasUniqueTitle(r, updatedBlog.Title, updatedBlog.Id)
 	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	if !hasUniqueTitle {
+		HandleClientError(w, fmt.Errorf("title '%v' is already taken", updatedBlog.Title))
+		return
+	}
+
+	hasFile := true 
+	thumbnail, header, err := r.FormFile("thumbnail") 
+	if err == http.ErrMissingFile {
+		hasFile = false 
+	} else if err != nil {
 		HandleClientError(w, err)
 		return
 	}
 
-	thumbnail, header, err := r.FormFile("thumbnail") 
-	if err != nil && err != http.ErrMissingFile {
-		HandleClientError(w, err)
+	blog, err := db.UpdateBlog(r, updatedBlog)
+	if err != nil {
+		HandleServerError(w, r, err)
 		return
 	}
-	if err == nil {
+
+	if hasFile {
 		defer thumbnail.Close()
 
 		buf := bytes.NewBuffer(nil)
@@ -339,13 +376,16 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.Redirect(w, r, "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)), http.StatusSeeOther)
-
+	w.Header().Set("HX-Redirect", "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)))
 }
 
 func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 	paramId := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(paramId)	
+	if err != nil {
+		HandleNotFound(w, r)
+		return
+	}
 
 	blog, err := db.GetBlogById(r, int32(id))
 	if err != nil {
@@ -377,7 +417,7 @@ func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 
 	blog, err = db.UpdateBlog(r, updatedBlog)
 	if err != nil {
-		HandleClientError(w, err)
+		HandleNotFound(w, r)
 		return
 	}
 	
@@ -394,8 +434,14 @@ func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-    blogs, err := db.GetBlogsByCreator(r, 1) //TODO: don't hardcode userId 
-    if err != nil {
+	sessionUser, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+    blogs, err := db.GetBlogsByCreator(r, sessionUser.Username)
+    if err != nil && err != sql.ErrNoRows {
         HandleServerError(w, r, err)
         return
     }
@@ -405,6 +451,53 @@ func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
 	renderPage(pages["admin"], w, r, d)
 }
 
+func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
+	sessionUser, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	if sessionUser.SoulScore > 0 {
+		http.Redirect(w, r, "/account", http.StatusSeeOther)
+		return
+	}
+
+	if pages["placementTest"] == nil {
+		var err error
+		pages["placementTest"], err = template.ParseFiles(baseTemplate, 
+			"templates/pages/placement-test.html", "templates/components/select-input.html", "templates/components/checkbox-input.html",
+			"templates/components/test-result.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+
+	questions, err := db.GetPlacementTestQuestions(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+	}
+
+	questionInputs := types.QuestionInputs{}	
+	for _, q := range questions {
+		questionInput := types.QuestionInput{}
+		answers := make([]types.Answer, len(q.Answers))
+		for i := 0; i < len(answers); i++ {
+			answers[i] = types.Answer{Text: q.Answers[i], Value: i}
+		}
+		questionInput.Id = q.Id
+		questionInput.Label = q.Text
+		questionInput.Answers = answers 
+		if q.InputType == "select" {
+			questionInputs.SelectQuestions = append(questionInputs.SelectQuestions, questionInput)
+		} else if q.InputType == "checkbox" {
+			questionInputs.CheckboxQuestions = append(questionInputs.CheckboxQuestions, questionInput)
+		}
+	}
+
+	renderPage(pages["placementTest"], w, r, questionInputs)
+}
+
 func setCookie(w http.ResponseWriter, name string, value string) {
 	cookie := &http.Cookie{
 		Name:  name,
@@ -412,4 +505,16 @@ func setCookie(w http.ResponseWriter, name string, value string) {
 		Path:  "/",
 	}
 	http.SetCookie(w, cookie)
+}
+
+func hasUniqueTitle(r *http.Request, title string, id int32) (bool, error) {
+	// blog Id is 0 if no results
+	blog, err := db.GetBlogByTitle(r, title)
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+	if blog.Id > 0 && blog.Id != id {
+		return false, nil
+	}
+	return true, nil
 }

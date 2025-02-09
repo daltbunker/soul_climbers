@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"text/template"
@@ -16,8 +17,16 @@ func HandleServerError(w http.ResponseWriter, r *http.Request, err error) {
 			return
 		}
 	}
-	w.WriteHeader(http.StatusInternalServerError)
 	log.Printf("internal server error: %v", err)
+
+	// If HTMX request, need to render component not entire page
+	if r.Header.Get("HX-Request") != "" {
+		w.Header().Set("HX-Retarget", "#toast-container")
+		fmt.Fprint(w, "<span class=\"error-toast\">Ahh nuttz 🥜, there was an error on our server. If it's not fixed in 5 minutes, just wait longer</span>")
+		return
+	}
+
+	w.WriteHeader(http.StatusInternalServerError)
 	renderPage(pages["serverError"], w, r, nil)
 }
 
@@ -31,13 +40,44 @@ func HandleUnautorized(w http.ResponseWriter, r *http.Request, authenticated boo
 			return
 		}
 	}
+	log.Printf("user unauthorized, authenticated=%v", authenticated)
+
+	// If HTMX request, need to render component not entire page
+	if r.Header.Get("HX-Request") != "" {
+		w.Header().Set("HX-Retarget", ".main-content")
+		renderComponent(w, "unauthorized", "content", authenticated)
+		return
+	}
+
 	w.WriteHeader(http.StatusForbidden)
-	log.Printf("user unauthorized")
 	renderPage(pages["unauthorized"], w, r, authenticated)
 }
 
 func HandleClientError(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusBadRequest)
-	log.Printf("bad request: %v", err)
-	http.Error(w, err.Error(), http.StatusBadRequest)
+	w.Header().Set("HX-Retarget", "#toast-container")
+	log.Printf("client error: %v", err)
+	fmt.Fprintf(w, "<span class=\"error-toast\">Error(400) %v</span>", err.Error())
+}
+
+func HandleNotFound(w http.ResponseWriter, r *http.Request) {
+
+	if pages["not-found"] == nil {
+		var err error
+		pages["not-found"], err = template.ParseFiles(baseTemplate, "templates/pages/not-found.html")
+		if err != nil {
+			log.Print(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// If HTMX request, need to render component not entire page
+	if r.Header.Get("HX-Request") != "" {
+		w.Header().Set("HX-Retarget", ".main-content")
+		renderComponent(w, "not-found", "content", nil)
+		return
+	}
+
+	w.WriteHeader(http.StatusNotFound)
+	renderPage(pages["not-found"], w, r, nil)
 }

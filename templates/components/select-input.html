@@ -1,0 +1,13 @@
+{{define "select-input"}}
+<div class="input-container">
+    <label for="q-{{.Id}}" id="q-{{.Id}}-label">{{.Label}}</label>
+    <div>
+        <select name="q-{{.Id}}" id="q-{{.Id}}" style="max-width: 180px;">
+            <option value="" disabled selected>select an option</option>
+            {{range $answer := .Answers}}
+                <option value="{{$answer.Value}}">{{$answer.Text}}</option>
+            {{end}}
+        </select>
+    </div>
+</div>
+{{end}}

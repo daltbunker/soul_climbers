@@ -12,3 +12,9 @@ WHERE email = $1;
 SELECT *
 FROM users
 WHERE username = $1;
+
+-- name: SetUserSoulScore :one
+UPDATE users
+SET soul_score = $1 
+WHERE username = $2
+RETURNING *;

@@ -1,0 +1,15 @@
+{{define "test-result"}}
+<div>
+    <h3>
+        {{if lt . 50}}
+           <span style="color: #ffee60">{{.}}%</span> Ooof! Sorry to break the news but Collin Duffy is not a soul climber and neither are you.
+        {{end}}
+        {{if and (ge . 50) (lt . 70)}}
+            <span style="color: #ffee60">{{.}}%</span> Not bad! You may have failed college but at least you know Collin Duffy is not a soul climber! 
+        {{end}}
+        {{if ge . 70}}
+            <span style="color: #ffee60">{{.}}%</span> Nice, you are on your way to eternal life.
+        {{end}}
+    </h3>
+</div>
+{{end}}

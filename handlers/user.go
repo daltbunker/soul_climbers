@@ -13,9 +13,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var user types.User
-
-
 func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 
 	user := types.User{}
@@ -49,7 +46,7 @@ func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if signupForm.EmailError != "" || signupForm.UsernameError != "" || signupForm.PasswordError != "" {
-		renderComponent(w, r, "signup", "signup", signupForm)
+		renderComponent(w, "signup", "signup", signupForm)
 		return
 	}
 
@@ -88,7 +85,7 @@ func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed getting user from DB: %v", err)
 		loginForm.Email = user.Email
 		loginForm.EmailError = "email not found"
-		renderComponent(w, r, "login", "login", loginForm)
+		renderComponent(w, "login", "login", loginForm)
 		return
 	}
 
@@ -97,7 +94,7 @@ func HandleLoginUser(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed checking password: %v", err)
 		loginForm.Email = user.Email
 		loginForm.PasswordError = "password is incorrect"
-		renderComponent(w, r, "login", "login", loginForm)
+		renderComponent(w, "login", "login", loginForm)
 		return
 	}
 

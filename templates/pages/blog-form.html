@@ -1,6 +1,6 @@
 {{define "content"}}
     <h2>Create Blog</h2>
-    <form action="{{.FormAction}}" method="{{.FormMethod}}" enctype="multipart/form-data" class="form-fields">
+    <form hx-post="{{.RequestURL}}" enctype="multipart/form-data" class="form-fields">
 
         <div id="file-container">
         {{if .ImgName}}

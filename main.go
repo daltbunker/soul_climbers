@@ -78,6 +78,8 @@ func registerRoutes(r *chi.Mux) {
 	// protected (paths with "/admin" are restricted to admin role)
 	r.Group(func(r chi.Router) {
 		r.Use(handlers.SessionMiddleware)
+
+		// page routes
 		r.Get("/account", handlers.HandleGetAccount)
 		r.Get("/placement-test", handlers.HandleGetPlacementTest)
 		r.Get("/admin", handlers.HandleGetAdmin)
@@ -87,7 +89,10 @@ func registerRoutes(r *chi.Mux) {
 		r.Post("/admin/blog/preview/{id}", handlers.HandleUpdateBlogPreview) // HTML forms only allow GET and POST
 		r.Post("/admin/blog/preview", handlers.HandleNewBlogPreview)
 		r.Post("/admin/blog/{id}", handlers.HandlePublishBlog) // HTML forms only allow GET and POST
+
+		// data routes
 		r.Get("/v1/admin/blog/{id}/{imgName}", handlers.GetBlogImg)
 		r.Delete("/v1/admin/blog/{id}/thumbnail", handlers.DeleteBlogImg)
+		r.Post("/v1/placement-test", handlers.HandleSubmitPlacementTest)
 	})
 }

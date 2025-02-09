@@ -29,10 +29,29 @@ type BlogImg struct {
 	UpdatedAt time.Time
 }
 
+type PlacementTest struct {
+	PlacementTestID int32
+	UserID          int32
+	Score           int32
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+}
+
 type ResetToken struct {
 	Token      uuid.UUID
 	Expiration time.Time
 	Email      string
+}
+
+type TestQuestion struct {
+	TestQuestionID int32
+	QuestionText   string
+	InputType      string
+	Answers        string
+	AnswerPoints   string
+	Points         int32
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type User struct {
@@ -43,4 +62,5 @@ type User struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Role      string
+	SoulScore int32
 }

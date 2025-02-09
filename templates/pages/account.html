@@ -3,8 +3,18 @@
     <div class="stack">
         <div>Email: {{.Email}}</div>
         <div>Username: {{.Username}}</div>
+        <div class="line-up">
+            {{if gt .SoulScore 0}}
+                <span>Soul Rank: {{.SoulScore}}%</span>
+            {{else}}
+                <span>Soul Rank: NA</span>
+                <a href="/placement-test">
+                    <button class="btn-primary">Take Placement Test</button>
+            {{end}}
+            </a>
+        </div>
         <div>
-            <button class="btn-primary" hx-post="/v1/signout">Sign Out</button>
+            <button class="btn-secondary" hx-post="/v1/signout">Sign Out</button>
         </div>
     </div>
 {{end}}

@@ -52,3 +52,8 @@ FROM blog b
 INNER JOIN users u
     ON b.created_by = u.users_id
 WHERE b.created_by = $1;
+
+-- name: GetBlogByTitle :one
+SELECT *
+FROM blog b
+WHERE b.title = $1;

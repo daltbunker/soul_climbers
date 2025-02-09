@@ -13,7 +13,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users(username, email, password, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING users_id, username, email, password, created_at, updated_at, role
+RETURNING users_id, username, email, password, created_at, updated_at, role, soul_score
 `
 
 type CreateUserParams struct {
@@ -41,12 +41,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.SoulScore,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT users_id, username, email, password, created_at, updated_at, role
+SELECT users_id, username, email, password, created_at, updated_at, role, soul_score
 FROM users
 WHERE email = $1
 `
@@ -62,12 +63,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.SoulScore,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT users_id, username, email, password, created_at, updated_at, role
+SELECT users_id, username, email, password, created_at, updated_at, role, soul_score
 FROM users
 WHERE username = $1
 `
@@ -83,6 +85,35 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Role,
+		&i.SoulScore,
+	)
+	return i, err
+}
+
+const setUserSoulScore = `-- name: SetUserSoulScore :one
+UPDATE users
+SET soul_score = $1 
+WHERE username = $2
+RETURNING users_id, username, email, password, created_at, updated_at, role, soul_score
+`
+
+type SetUserSoulScoreParams struct {
+	SoulScore int32
+	Username  string
+}
+
+func (q *Queries) SetUserSoulScore(ctx context.Context, arg SetUserSoulScoreParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, setUserSoulScore, arg.SoulScore, arg.Username)
+	var i User
+	err := row.Scan(
+		&i.UsersID,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Role,
+		&i.SoulScore,
 	)
 	return i, err
 }

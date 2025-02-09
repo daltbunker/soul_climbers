@@ -22,6 +22,25 @@ func GetSession(r *http.Request) (*sessions.Session, error) {
 	return store.Get(r, "session")
 }
 
+func GetSessionUser(r *http.Request) (types.User, error) {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		return types.User{}, err
+	}
+	// User is not logged in
+	if session.IsNew {
+		return types.User{}, nil
+	}
+	user := types.User{
+		Email: session.Values["email"].(string),
+		Username: session.Values["username"].(string),
+		Role: session.Values["role"].(string),
+		SoulScore: session.Values["soul_score"].(int32),
+	}
+
+	return user, nil
+}
+
 func NewSession(r *http.Request, w http.ResponseWriter, user types.User) error {
 	session, err := store.Get(r, "session")
 	if err != nil {
@@ -31,6 +50,7 @@ func NewSession(r *http.Request, w http.ResponseWriter, user types.User) error {
 	session.Values["email"] = user.Email
 	session.Values["username"] = user.Username
 	session.Values["role"] = user.Role
+	session.Values["soul_score"] = user.SoulScore
 	session.Options.MaxAge = 30
 	err = session.Save(r, w)
 	if err != nil {
@@ -39,8 +59,23 @@ func NewSession(r *http.Request, w http.ResponseWriter, user types.User) error {
 	return nil
 }
 
+// TODO: Change to handle strings and validate session value
+func UpdateSession(r *http.Request, w http.ResponseWriter, key string, value int32) error {
+	session, err := store.Get(r, "session")
+	if err != nil {
+		return err
+	}
+
+	session.Values[key] = value 
+	err = session.Save(r, w)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func NewDevSession(w http.ResponseWriter, r *http.Request) {
-	NewSession(r, w, types.User{Username: "Wayne", Email: "wayne_ker@aol.com", Role: "admin"})	
+	NewSession(r, w, types.User{Username: "garth", Email: "garth@aol.com", Role: "admin", SoulScore: 0})	
 }
 
 func InitPages() {
@@ -55,34 +90,33 @@ func GetPage(w http.ResponseWriter, name string) (*template.Template, error) {
 }
 
 func renderPage(t *template.Template, w http.ResponseWriter, r *http.Request, data interface{}) {
-	user := types.User{} 
-	session, err := GetSession(r)
+	user, err := GetSessionUser(r)
 	if err != nil {
-		HandleServerError(w, r, err)
+		log.Print(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
-		user.Username = session.Values["email"].(string)
-		user.Email = session.Values["username"].(string)
-		user.Role = session.Values["role"].(string)
 	}
 
 	err = t.Execute(w, types.Base{MainContent: data, User: user})
 	if err != nil {
-		HandleServerError(w, r, err)
+		log.Print(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func renderComponent(w http.ResponseWriter, r *http.Request, page string, name string, data interface{}) {
+func renderComponent(w http.ResponseWriter, page string, name string, data interface{}) {
 	t, err := GetPage(w, page)
 	if err != nil {
 		log.Print(err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	err = t.ExecuteTemplate(w, name, data)
 	if err != nil {
-		HandleServerError(w, r, err)
+		log.Print(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
