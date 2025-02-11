@@ -94,5 +94,6 @@ func registerRoutes(r *chi.Mux) {
 		r.Get("/v1/admin/blog/{id}/{imgName}", handlers.GetBlogImg)
 		r.Delete("/v1/admin/blog/{id}/thumbnail", handlers.DeleteBlogImg)
 		r.Post("/v1/placement-test", handlers.HandleSubmitPlacementTest)
+		r.Delete("/v1/admin/blog/{id}", handlers.DeleteBlog)
 	})
 }

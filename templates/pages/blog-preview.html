@@ -1,6 +1,6 @@
 {{define "content"}}
     {{if .ImgName}}
-    <img src="/v1/blog/{{.Id}}/{{.ImgName}}" alt="">
+    <img class="blog-img" src="/v1/blog/{{.Id}}/{{.ImgName}}" alt="">
     {{else}}
     <div class="empty-img">No Image</div>
     {{end}}
@@ -12,6 +12,7 @@
         <a href="/admin/blog/{{.Id}}">
             <button class="btn-secondary">edit</button>
         </a>
+        <button class="btn-delete" hx-delete="/v1/admin/blog/{{.Id}}">delete</button>
         {{if .IsPublished}}
         <button class="btn-primary disabled" disabled>publish</button>
         {{else}}

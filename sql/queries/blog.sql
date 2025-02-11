@@ -57,3 +57,8 @@ WHERE b.created_by = $1;
 SELECT *
 FROM blog b
 WHERE b.title = $1;
+
+-- name: DeleteBlog :one
+DELETE FROM blog
+WHERE blog_id = $1
+RETURNING *;

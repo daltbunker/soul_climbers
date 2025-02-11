@@ -408,7 +408,7 @@ func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
     }
 
     if len(missingFields) > 0 {
-        fmt.Fprintf(w, "<span class=\"sub-text warning\">*missing fields: %v</span>", strings.Join(missingFields, ", "))
+        fmt.Fprintf(w, "<span id=\"publish-info\" class=\"sub-text warning\">*missing fields: %v</span>", strings.Join(missingFields, ", "))
         return
     }
 

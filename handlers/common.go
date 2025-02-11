@@ -11,8 +11,13 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
-var store *sessions.CookieStore
-var pages map[string]*template.Template
+var (
+	store *sessions.CookieStore
+	pages map[string]*template.Template
+)
+
+const SESSION_LIFESPAN = 60 * 60 * 24 * 7 // 7 Days
+
 
 func InitSession(key string) {
 	store = sessions.NewCookieStore([]byte(key))
@@ -51,7 +56,7 @@ func NewSession(r *http.Request, w http.ResponseWriter, user types.User) error {
 	session.Values["username"] = user.Username
 	session.Values["role"] = user.Role
 	session.Values["soul_score"] = user.SoulScore
-	session.Options.MaxAge = 30
+	session.Options.MaxAge = SESSION_LIFESPAN
 	err = session.Save(r, w)
 	if err != nil {
 		return err

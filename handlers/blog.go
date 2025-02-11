@@ -49,3 +49,20 @@ func DeleteBlogImg(w http.ResponseWriter, r *http.Request)  {
 
 	fmt.Fprint(w, "<div class=\"input-container\"><label for=\"thumbnail\">Thumbnail:</label><input type=\"file\" name=\"thumbnail\" id=\"thumbnail\"></div>")
 }
+
+func DeleteBlog(w http.ResponseWriter, r *http.Request)  {
+	paramId := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(paramId)	
+	if err != nil {
+		HandleClientError(w, fmt.Errorf("invalid param 'id': %v", paramId))
+		return
+	}
+
+	err = db.DeleteBlog(r, int32(id))
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	w.Header().Set("HX-Redirect", "/admin")
+}

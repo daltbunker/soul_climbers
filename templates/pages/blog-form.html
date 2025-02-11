@@ -51,5 +51,16 @@
                 }
             });
         })
+
+        document.forms[0].addEventListener('htmx:beforeRequest', e => {
+            const span = document.getElementById('title-count');
+            const input = document.getElementById('title');
+            if (!input.value) {
+                e.preventDefault();
+                span.textContent = '*required';
+                span.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+        });
+
     </script>
 {{end}}

@@ -84,6 +84,28 @@ func (q *Queries) CreateBlogImg(ctx context.Context, arg CreateBlogImgParams) (B
 	return i, err
 }
 
+const deleteBlog = `-- name: DeleteBlog :one
+DELETE FROM blog
+WHERE blog_id = $1
+RETURNING blog_id, body, title, excerpt, is_published, created_by, created_at, updated_at
+`
+
+func (q *Queries) DeleteBlog(ctx context.Context, blogID int32) (Blog, error) {
+	row := q.db.QueryRowContext(ctx, deleteBlog, blogID)
+	var i Blog
+	err := row.Scan(
+		&i.BlogID,
+		&i.Body,
+		&i.Title,
+		&i.Excerpt,
+		&i.IsPublished,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const deleteBlogImg = `-- name: DeleteBlogImg :one
 DELETE FROM blog_img
 WHERE blog_id = $1

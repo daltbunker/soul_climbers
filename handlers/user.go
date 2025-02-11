@@ -196,26 +196,20 @@ func sendResetLink(email string) {
 
 func isValidPassword(s string) bool {
 	var (
-		hasMinLen  = false
-		hasUpper   = false
-		hasLower   = false
+		hasMinLen  = len(s) >= 8
 		hasNumber  = false
+		hasLetter = false
 		hasSpecial = false
 	)
-	if len(s) >= 8 {
-		hasMinLen = true
-	}
 	for _, char := range s {
 		switch {
-		case unicode.IsUpper(char):
-			hasUpper = true
-		case unicode.IsLower(char):
-			hasLower = true
 		case unicode.IsNumber(char):
 			hasNumber = true
 		case unicode.IsPunct(char) || unicode.IsSymbol(char):
 			hasSpecial = true
+		case unicode.IsLetter(char):
+			hasLetter = true
 		}
 	}
-	return hasMinLen && hasUpper && hasLower && hasNumber && hasSpecial
+	return hasMinLen && hasNumber && hasSpecial && hasLetter
 }

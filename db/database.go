@@ -361,7 +361,7 @@ func GetPlacementTest(r *http.Request, username string) (int32, error) {
 	return dbPlacementTest, err
 }
 
-func SetUserSoulScore (r *http.Request, username string, soulScore int32) (int32, error) {
+func SetUserSoulScore(r *http.Request, username string, soulScore int32) (int32, error) {
 	dbUserSoulScore, err := DB.SetUserSoulScore(r.Context(), database.SetUserSoulScoreParams{
 		SoulScore: soulScore,
 		Username: username,
@@ -370,4 +370,9 @@ func SetUserSoulScore (r *http.Request, username string, soulScore int32) (int32
 		return 0, nil
 	}
 	return dbUserSoulScore.SoulScore, err
+}
+
+func DeleteBlog(r *http.Request, id int32) error {
+	_, err := DB.DeleteBlog(r.Context(), id)
+	return err
 }
