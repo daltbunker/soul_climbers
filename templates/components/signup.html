@@ -24,7 +24,7 @@
     <div>
         <input class="med-input" type="password" value="{{.Password}}" name="password" maxlength="30" id="password" required>
         {{if .PasswordError}}
-        <span class="warning">{{.PasswordError}}</span>
+        <span class="warning">silly goose, you are missing: {{.PasswordError}}</span>
         {{else}}
         <span style="font-size: 0.8rem;">minimum eight characters, at least one letter, one number, and one special character</span>
         {{end}}

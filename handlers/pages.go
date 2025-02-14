@@ -185,6 +185,10 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	blog, err := db.GetBlogById(r, int32(id))
+	if err == sql.ErrNoRows {
+		HandleNotFound(w, r)
+		return
+	}
 	if err != nil {
 		HandleServerError(w, r, err)
 		return
@@ -221,6 +225,10 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	blog, err := db.GetBlogById(r, int32(id))
+	if err == sql.ErrNoRows {
+		HandleNotFound(w, r)
+		return
+	}
 	if err != nil {
 		HandleServerError(w, r, err)
 		return

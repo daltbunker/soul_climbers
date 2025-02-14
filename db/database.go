@@ -331,7 +331,6 @@ func GetPlacementTestQuestions(r *http.Request) ([]types.Question, error) {
     return questions, nil
 }
 
-//TODO: change userId to username because that's what is in Session
 func InsertPlacementTest(r *http.Request, username string, score int32) error {
 	user, err := DB.GetUserByUsername(r.Context(), username)
 	if err != nil {

@@ -40,10 +40,11 @@ func HandleNewUser(w http.ResponseWriter, r *http.Request) {
 		signupForm.UsernameError = "this username is already taken"
 	}
 
-	if !isValidPassword(user.Password) {
-		// TODO: return why password is invalid
-		signupForm.PasswordError = "minimum eight characters, at least one letter, one number, and one special character"
+	if len(user.Username) == 0 {
+		signupForm.UsernameError = "please enter a username"
 	}
+
+	signupForm.PasswordError = validatePassword(user.Password)
 
 	if signupForm.EmailError != "" || signupForm.UsernameError != "" || signupForm.PasswordError != "" {
 		renderComponent(w, "signup", "signup", signupForm)
@@ -194,22 +195,30 @@ func sendResetLink(email string) {
 	}
 }
 
-func isValidPassword(s string) bool {
-	var (
-		hasMinLen  = len(s) >= 8
-		hasNumber  = false
-		hasLetter = false
-		hasSpecial = false
-	)
+func validatePassword(s string) string {
+	required := []string{"minimum eight characters", "a letter", "a number", "a special character"}
+	if len(s) >= 8 {
+		required[0] = ""
+	}
 	for _, char := range s {
 		switch {
-		case unicode.IsNumber(char):
-			hasNumber = true
-		case unicode.IsPunct(char) || unicode.IsSymbol(char):
-			hasSpecial = true
 		case unicode.IsLetter(char):
-			hasLetter = true
+			required[1] = ""
+		case unicode.IsNumber(char):
+			required[2] = ""
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			required[3] = ""
 		}
 	}
-	return hasMinLen && hasNumber && hasSpecial && hasLetter
+
+	errorMessage := ""
+	for i := 0; i < len(required); i++ {
+		if len(errorMessage) == 0 && len(required[i]) > 0 {
+			errorMessage = required[i]
+		} else if len(required[i]) > 0 {
+			errorMessage += ", " + required[i]
+		}
+	}
+
+	return errorMessage 
 }
