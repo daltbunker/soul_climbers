@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"log"
 	"net/http"
 	"os"
@@ -13,15 +14,19 @@ import (
 	"github.com/joho/godotenv"
 )
 
+//go:embed templates/*
+var templates embed.FS
+
 func main() {
 
 	err := godotenv.Load()
-	if err != nil {
+	if os.Getenv("MODE") == "" && err != nil {
 		log.Fatalf("Failed loading .env: %v", err)
 	}
 	utils.ValidateEnv()
 	db.InitDatabase(os.Getenv("DB_URL"))
-	handlers.InitPages()
+	log.Println(templates.ReadDir("templates"))
+	handlers.InitPages(templates)
 	handlers.InitSession(os.Getenv("SESSION_KEY"))
 
 	router := chi.NewRouter()

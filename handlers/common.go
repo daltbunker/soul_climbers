@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"embed"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 var (
 	store *sessions.CookieStore
 	pages map[string]*template.Template
+	templates embed.FS
 )
 
 const SESSION_LIFESPAN = 60 * 60 * 24 * 7 // 7 Days
@@ -83,7 +85,8 @@ func NewDevSession(w http.ResponseWriter, r *http.Request) {
 	NewSession(r, w, types.User{Username: "garth", Email: "garth@aol.com", Role: "admin", SoulScore: 0})	
 }
 
-func InitPages() {
+func InitPages(t embed.FS) {
+	templates = t
 	pages = make(map[string]*template.Template)
 }
 

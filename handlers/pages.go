@@ -23,7 +23,7 @@ var baseTemplate = "templates/base.html"
 func HandleGetHome(w http.ResponseWriter, r *http.Request) {
 	if pages["home"] == nil {
 		var err error
-		pages["home"], err = template.ParseFiles(baseTemplate, "templates/pages/home.html", "templates/components/blog-card.html")
+		pages["home"], err = template.ParseFS(templates, baseTemplate, "templates/pages/home.html", "templates/components/blog-card.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
