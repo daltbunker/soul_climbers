@@ -25,7 +25,6 @@ func main() {
 	}
 	utils.ValidateEnv()
 	db.InitDatabase(os.Getenv("DB_URL"))
-	log.Println(templates.ReadDir("templates"))
 	handlers.InitPages(templates)
 	handlers.InitSession(os.Getenv("SESSION_KEY"))
 

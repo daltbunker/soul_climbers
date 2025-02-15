@@ -43,7 +43,7 @@ func HandleGetHome(w http.ResponseWriter, r *http.Request) {
 func HandleGetLogin(w http.ResponseWriter, r *http.Request) {
 	if pages["login"] == nil {
 		var err error
-		pages["login"], err = template.ParseFiles(baseTemplate, "templates/pages/login.html", "templates/components/login.html")
+		pages["login"], err = template.ParseFS(templates, "templates/pages/login.html", "templates/components/login.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -55,7 +55,7 @@ func HandleGetLogin(w http.ResponseWriter, r *http.Request) {
 func HandleGetSignup(w http.ResponseWriter, r *http.Request) {
 	if pages["signup"] == nil {
 		var err error
-		pages["signup"], err = template.ParseFiles(baseTemplate, "templates/pages/signup.html", "templates/components/signup.html")
+		pages["signup"], err = template.ParseFS(templates, "templates/pages/signup.html", "templates/components/signup.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -67,7 +67,7 @@ func HandleGetSignup(w http.ResponseWriter, r *http.Request) {
 func HandleGetAccount(w http.ResponseWriter, r *http.Request) {
 	if pages["account"] == nil {
 		var err error
-		pages["account"], err = template.ParseFiles(baseTemplate, "templates/pages/account.html")
+		pages["account"], err = template.ParseFS(templates, "templates/pages/account.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -84,7 +84,7 @@ func HandleGetAccount(w http.ResponseWriter, r *http.Request) {
 func HandleGetResetEmail(w http.ResponseWriter, r *http.Request) {
 	if pages["resetEmail"] == nil {
 		var err error
-		pages["resetEmail"], err = template.ParseFiles(baseTemplate, "templates/pages/reset-email.html")
+		pages["resetEmail"], err = template.ParseFS(templates, "templates/pages/reset-email.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -118,7 +118,7 @@ func HandleGetResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	if pages["resetPassword"] == nil {
 		var err error
-		pages["resetPassword"], err = template.ParseFiles(baseTemplate, "templates/pages/reset-password.html")
+		pages["resetPassword"], err = template.ParseFS(templates, "templates/pages/reset-password.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -130,7 +130,7 @@ func HandleGetResetPassword(w http.ResponseWriter, r *http.Request) {
 func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 	if pages["blog"] == nil {
 		var err error
-		pages["blog"], err = template.ParseFiles(baseTemplate, "templates/pages/blog.html")
+		pages["blog"], err = template.ParseFS(templates, "templates/pages/blog.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -161,7 +161,7 @@ func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 	if pages["blogForm"] == nil {
 		var err error
-		pages["blogForm"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-form.html")
+		pages["blogForm"], err = template.ParseFS(templates, "templates/pages/blog-form.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -169,15 +169,15 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	paramId := chi.URLParam(r, "id")
-	if paramId == ""{
-		blogForm := types.BlogForm {
+	if paramId == "" {
+		blogForm := types.BlogForm{
 			RequestURL: "/admin/blog/preview",
 		}
 		renderPage(pages["blogForm"], w, r, blogForm)
 		return
 	}
 
-	id, err := strconv.Atoi(paramId)	
+	id, err := strconv.Atoi(paramId)
 	if err != nil {
 		log.Printf("Blog id must be type int: %v", err)
 		HandleNotFound(w, r)
@@ -192,14 +192,14 @@ func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		HandleServerError(w, r, err)
 		return
-	}	
-	
-	blogForm := types.BlogForm {
-		Id: blog.Id,
-		Body: blog.Body,
-		Title: blog.Title,
-		Excerpt: blog.Excerpt,
-		ImgName: blog.ImgName, 
+	}
+
+	blogForm := types.BlogForm{
+		Id:         blog.Id,
+		Body:       blog.Body,
+		Title:      blog.Title,
+		Excerpt:    blog.Excerpt,
+		ImgName:    blog.ImgName,
 		RequestURL: "/admin/blog/preview/" + paramId,
 	}
 
@@ -210,7 +210,7 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	if pages["blogPreview"] == nil {
 		var err error
-		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
+		pages["blogPreview"], err = template.ParseFS(templates, "templates/pages/blog-preview.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -234,7 +234,7 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renderPage(pages["blogPreview"], w, r, blog)	
+	renderPage(pages["blogPreview"], w, r, blog)
 }
 
 func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
@@ -247,7 +247,7 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 	newBlog := types.Blog{}
 	newBlog.Title = sanitize(r.FormValue("title"))
 	newBlog.Body = sanitize(r.FormValue("body"))
-	newBlog.Excerpt= sanitize(r.FormValue("excerpt"))
+	newBlog.Excerpt = sanitize(r.FormValue("excerpt"))
 	newBlog.IsPublished = false
 	newBlog.CreatedBy = sessionUser.Username
 
@@ -262,10 +262,10 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// File(and all other parameters) are optional for preview
-	hasFile := true 
-	thumbnail, header, err := r.FormFile("thumbnail") 
+	hasFile := true
+	thumbnail, header, err := r.FormFile("thumbnail")
 	if err == http.ErrMissingFile {
-		hasFile = false 
+		hasFile = false
 	} else if err != nil {
 		HandleClientError(w, err)
 		return
@@ -288,9 +288,9 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 		newBlogImg := types.BlogImg{
 			ImgName: header.Filename,
-			Img: buf.Bytes(),
-			BlogId: blog.Id,
-		} 
+			Img:     buf.Bytes(),
+			BlogId:  blog.Id,
+		}
 
 		_, err = db.NewBlogImg(r, newBlogImg)
 		if err != nil {
@@ -301,21 +301,20 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	if pages["blogPreview"] == nil {
 		var err error
-		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
+		pages["blogPreview"], err = template.ParseFS(templates, "templates/pages/blog-preview.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
 		}
 	}
-	
 
-	w.Header().Set("HX-Redirect", "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)))
+	w.Header().Set("HX-Redirect", "/admin/blog/preview/"+strconv.Itoa(int(blog.Id)))
 }
 
 func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	paramId := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(paramId)	
+	id, err := strconv.Atoi(paramId)
 	if err != nil {
 		HandleClientError(w, err)
 		return
@@ -325,7 +324,7 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 	updatedBlog.Id = int32(id)
 	updatedBlog.Title = sanitize(r.FormValue("title"))
 	updatedBlog.Body = sanitize(r.FormValue("body"))
-	updatedBlog.Excerpt= sanitize(r.FormValue("excerpt"))
+	updatedBlog.Excerpt = sanitize(r.FormValue("excerpt"))
 	updatedBlog.IsPublished = false
 
 	hasUniqueTitle, err := hasUniqueTitle(r, updatedBlog.Title, updatedBlog.Id)
@@ -338,10 +337,10 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hasFile := true 
-	thumbnail, header, err := r.FormFile("thumbnail") 
+	hasFile := true
+	thumbnail, header, err := r.FormFile("thumbnail")
 	if err == http.ErrMissingFile {
-		hasFile = false 
+		hasFile = false
 	} else if err != nil {
 		HandleClientError(w, err)
 		return
@@ -364,9 +363,9 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 		newBlogImg := types.BlogImg{
 			ImgName: header.Filename,
-			Img: buf.Bytes(),
-			BlogId: blog.Id,
-		} 
+			Img:     buf.Bytes(),
+			BlogId:  blog.Id,
+		}
 
 		_, err = db.NewBlogImg(r, newBlogImg)
 		if err != nil {
@@ -374,22 +373,22 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	
+
 	if pages["blogPreview"] == nil {
 		var err error
-		pages["blogPreview"], err = template.ParseFiles(baseTemplate, "templates/pages/blog-preview.html")
+		pages["blogPreview"], err = template.ParseFS(templates, "templates/pages/blog-preview.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
 		}
 	}
 
-	w.Header().Set("HX-Redirect", "/admin/blog/preview/" + strconv.Itoa(int(blog.Id)))
+	w.Header().Set("HX-Redirect", "/admin/blog/preview/"+strconv.Itoa(int(blog.Id)))
 }
 
 func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 	paramId := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(paramId)	
+	id, err := strconv.Atoi(paramId)
 	if err != nil {
 		HandleNotFound(w, r)
 		return
@@ -401,24 +400,24 @@ func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    var missingFields []string
-    if blog.ImgName == "" {
-        missingFields = append(missingFields, "image")
-    }
-    if blog.Title == "" {
-        missingFields = append(missingFields, "title")
-    }
-    if blog.Excerpt == "" {
-        missingFields = append(missingFields, "excerpt")
-    }
-    if blog.Body == "" {
-        missingFields = append(missingFields, "body")
-    }
+	var missingFields []string
+	if blog.ImgName == "" {
+		missingFields = append(missingFields, "image")
+	}
+	if blog.Title == "" {
+		missingFields = append(missingFields, "title")
+	}
+	if blog.Excerpt == "" {
+		missingFields = append(missingFields, "excerpt")
+	}
+	if blog.Body == "" {
+		missingFields = append(missingFields, "body")
+	}
 
-    if len(missingFields) > 0 {
-        fmt.Fprintf(w, "<span id=\"publish-info\" class=\"sub-text warning\">*missing fields: %v</span>", strings.Join(missingFields, ", "))
-        return
-    }
+	if len(missingFields) > 0 {
+		fmt.Fprintf(w, "<span id=\"publish-info\" class=\"sub-text warning\">*missing fields: %v</span>", strings.Join(missingFields, ", "))
+		return
+	}
 
 	updatedBlog := blog
 	updatedBlog.IsPublished = true
@@ -428,14 +427,14 @@ func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 		HandleNotFound(w, r)
 		return
 	}
-	
+
 	w.Header().Set("HX-Redirect", "/admin")
 }
 
 func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
 	if pages["admin"] == nil {
 		var err error
-		pages["admin"], err = template.ParseFiles(baseTemplate, "templates/pages/admin.html", "templates/components/admin-blog-card.html")
+		pages["admin"], err = template.ParseFS(templates, "templates/pages/admin.html", "templates/components/admin-blog-card.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -448,11 +447,11 @@ func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    blogs, err := db.GetBlogsByCreator(r, sessionUser.Username)
-    if err != nil && err != sql.ErrNoRows {
-        HandleServerError(w, r, err)
-        return
-    }
+	blogs, err := db.GetBlogsByCreator(r, sessionUser.Username)
+	if err != nil && err != sql.ErrNoRows {
+		HandleServerError(w, r, err)
+		return
+	}
 
 	d := types.Admin{Blogs: blogs}
 
@@ -472,7 +471,7 @@ func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
 
 	if pages["placementTest"] == nil {
 		var err error
-		pages["placementTest"], err = template.ParseFiles(baseTemplate, 
+		pages["placementTest"], err = template.ParseFS(templates,
 			"templates/pages/placement-test.html", "templates/components/select-input.html", "templates/components/checkbox-input.html",
 			"templates/components/test-result.html")
 		if err != nil {
@@ -486,7 +485,7 @@ func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
 		HandleServerError(w, r, err)
 	}
 
-	questionInputs := types.QuestionInputs{}	
+	questionInputs := types.QuestionInputs{}
 	for _, q := range questions {
 		questionInput := types.QuestionInput{}
 		answers := make([]types.Answer, len(q.Answers))
@@ -495,7 +494,7 @@ func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
 		}
 		questionInput.Id = q.Id
 		questionInput.Label = q.Text
-		questionInput.Answers = answers 
+		questionInput.Answers = answers
 		if q.InputType == "select" {
 			questionInputs.SelectQuestions = append(questionInputs.SelectQuestions, questionInput)
 		} else if q.InputType == "checkbox" {
