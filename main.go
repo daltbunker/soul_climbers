@@ -19,10 +19,6 @@ var templates embed.FS
 
 func main() {
 
-	log.Println(os.Getenv("PORT"))
-	log.Println(os.Getenv("DB_URL"))
-	log.Println(os.Getenv("MODE"))
-
 	err := godotenv.Load()
 	if os.Getenv("MODE") == "" && err != nil {
 		log.Fatalf("Failed loading .env: %v", err)
