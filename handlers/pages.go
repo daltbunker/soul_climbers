@@ -43,7 +43,7 @@ func HandleGetHome(w http.ResponseWriter, r *http.Request) {
 func HandleGetLogin(w http.ResponseWriter, r *http.Request) {
 	if pages["login"] == nil {
 		var err error
-		pages["login"], err = template.ParseFS(templates, "templates/pages/login.html", "templates/components/login.html")
+		pages["login"], err = template.ParseFS(templates, baseTemplate, "templates/pages/login.html", "templates/components/login.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -55,7 +55,7 @@ func HandleGetLogin(w http.ResponseWriter, r *http.Request) {
 func HandleGetSignup(w http.ResponseWriter, r *http.Request) {
 	if pages["signup"] == nil {
 		var err error
-		pages["signup"], err = template.ParseFS(templates, "templates/pages/signup.html", "templates/components/signup.html")
+		pages["signup"], err = template.ParseFS(templates, baseTemplate, "templates/pages/signup.html", "templates/components/signup.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -67,7 +67,7 @@ func HandleGetSignup(w http.ResponseWriter, r *http.Request) {
 func HandleGetAccount(w http.ResponseWriter, r *http.Request) {
 	if pages["account"] == nil {
 		var err error
-		pages["account"], err = template.ParseFS(templates, "templates/pages/account.html")
+		pages["account"], err = template.ParseFS(templates, baseTemplate, "templates/pages/account.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -84,7 +84,7 @@ func HandleGetAccount(w http.ResponseWriter, r *http.Request) {
 func HandleGetResetEmail(w http.ResponseWriter, r *http.Request) {
 	if pages["resetEmail"] == nil {
 		var err error
-		pages["resetEmail"], err = template.ParseFS(templates, "templates/pages/reset-email.html")
+		pages["resetEmail"], err = template.ParseFS(templates, baseTemplate, "templates/pages/reset-email.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -118,7 +118,7 @@ func HandleGetResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	if pages["resetPassword"] == nil {
 		var err error
-		pages["resetPassword"], err = template.ParseFS(templates, "templates/pages/reset-password.html")
+		pages["resetPassword"], err = template.ParseFS(templates, baseTemplate, "templates/pages/reset-password.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -130,7 +130,7 @@ func HandleGetResetPassword(w http.ResponseWriter, r *http.Request) {
 func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 	if pages["blog"] == nil {
 		var err error
-		pages["blog"], err = template.ParseFS(templates, "templates/pages/blog.html")
+		pages["blog"], err = template.ParseFS(templates, baseTemplate, "templates/pages/blog.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -161,7 +161,7 @@ func HandleGetBlog(w http.ResponseWriter, r *http.Request) {
 func HandleGetBlogForm(w http.ResponseWriter, r *http.Request) {
 	if pages["blogForm"] == nil {
 		var err error
-		pages["blogForm"], err = template.ParseFS(templates, "templates/pages/blog-form.html")
+		pages["blogForm"], err = template.ParseFS(templates, baseTemplate, "templates/pages/blog-form.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -210,7 +210,7 @@ func HandleGetBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	if pages["blogPreview"] == nil {
 		var err error
-		pages["blogPreview"], err = template.ParseFS(templates, "templates/pages/blog-preview.html")
+		pages["blogPreview"], err = template.ParseFS(templates, baseTemplate, "templates/pages/blog-preview.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -301,7 +301,7 @@ func HandleNewBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	if pages["blogPreview"] == nil {
 		var err error
-		pages["blogPreview"], err = template.ParseFS(templates, "templates/pages/blog-preview.html")
+		pages["blogPreview"], err = template.ParseFS(templates, baseTemplate, "templates/pages/blog-preview.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -376,7 +376,7 @@ func HandleUpdateBlogPreview(w http.ResponseWriter, r *http.Request) {
 
 	if pages["blogPreview"] == nil {
 		var err error
-		pages["blogPreview"], err = template.ParseFS(templates, "templates/pages/blog-preview.html")
+		pages["blogPreview"], err = template.ParseFS(templates, baseTemplate, "templates/pages/blog-preview.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -434,7 +434,7 @@ func HandlePublishBlog(w http.ResponseWriter, r *http.Request) {
 func HandleGetAdmin(w http.ResponseWriter, r *http.Request) {
 	if pages["admin"] == nil {
 		var err error
-		pages["admin"], err = template.ParseFS(templates, "templates/pages/admin.html", "templates/components/admin-blog-card.html")
+		pages["admin"], err = template.ParseFS(templates, baseTemplate, "templates/pages/admin.html", "templates/components/admin-blog-card.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -471,7 +471,7 @@ func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
 
 	if pages["placementTest"] == nil {
 		var err error
-		pages["placementTest"], err = template.ParseFS(templates,
+		pages["placementTest"], err = template.ParseFS(templates, baseTemplate,
 			"templates/pages/placement-test.html", "templates/components/select-input.html", "templates/components/checkbox-input.html",
 			"templates/components/test-result.html")
 		if err != nil {

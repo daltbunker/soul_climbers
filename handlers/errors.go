@@ -12,7 +12,7 @@ func HandleServerError(w http.ResponseWriter, r *http.Request, err error) {
 
 	if pages["serverError"] == nil {
 		var err error
-		pages["serverError"], err = template.ParseFS(templates, "templates/pages/server-error.html")
+		pages["serverError"], err = template.ParseFS(templates, baseTemplate, "templates/pages/server-error.html")
 		if err != nil {
 			log.Print(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -36,7 +36,7 @@ func HandleUnautorized(w http.ResponseWriter, r *http.Request, authenticated boo
 
 	if pages["unauthorized"] == nil {
 		var err error
-		pages["unauthorized"], err = template.ParseFS(templates, "templates/pages/unauthorized.html")
+		pages["unauthorized"], err = template.ParseFS(templates, baseTemplate, "templates/pages/unauthorized.html")
 		if err != nil {
 			log.Print(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -65,7 +65,7 @@ func HandleNotFound(w http.ResponseWriter, r *http.Request) {
 
 	if pages["not-found"] == nil {
 		var err error
-		pages["not-found"], err = template.ParseFS(templates, "templates/pages/not-found.html")
+		pages["not-found"], err = template.ParseFS(templates, baseTemplate, "templates/pages/not-found.html")
 		if err != nil {
 			log.Print(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
