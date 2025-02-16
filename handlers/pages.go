@@ -485,7 +485,7 @@ func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
 		HandleServerError(w, r, err)
 		return
 	}
-	if len(questions) > 0 {
+	if len(questions) == 0 {
 		HandleServerError(w, r, fmt.Errorf("No data found: fetching placment test questions"))
 		return
 	}
