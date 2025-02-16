@@ -98,6 +98,7 @@ func GetPage(w http.ResponseWriter, name string) (*template.Template, error) {
 }
 
 func renderPage(t *template.Template, w http.ResponseWriter, r *http.Request, data interface{}) {
+	log.Printf("rendering page with data: %v\n", data)
 	user, err := GetSessionUser(r)
 	if err != nil {
 		log.Print(err.Error())
