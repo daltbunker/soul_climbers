@@ -483,6 +483,11 @@ func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
 	questions, err := db.GetPlacementTestQuestions(r)
 	if err != nil {
 		HandleServerError(w, r, err)
+		return
+	}
+	if len(questions) > 0 {
+		HandleServerError(w, r, fmt.Errorf("No data found: fetching placment test questions"))
+		return
 	}
 
 	questionInputs := types.QuestionInputs{}

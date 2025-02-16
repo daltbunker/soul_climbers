@@ -9,10 +9,10 @@
     <p>{{.Body}}</p>
 
     <div class="line-up">
+        <button class="btn-delete" hx-delete="/v1/admin/blog/{{.Id}}" hx-confirm="are you sure you want to delete this blog?">delete</button>
         <a href="/admin/blog/{{.Id}}">
             <button class="btn-secondary">edit</button>
         </a>
-        <button class="btn-delete" hx-delete="/v1/admin/blog/{{.Id}}" hx-confirm="are you sure you want to delete this blog?">delete</button>
         {{if .IsPublished}}
         <button class="btn-primary disabled" disabled>publish</button>
         {{else}}

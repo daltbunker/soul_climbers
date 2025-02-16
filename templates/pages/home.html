@@ -1,5 +1,9 @@
 {{define "content"}}
-    {{range $b := .Blogs}}
-        {{template "blog-card" $b}}
+    {{if .Blogs}}
+        {{range $b := .Blogs}}
+            {{template "blog-card" $b}}
+        {{end}}
+    {{else}}
+        <div>No Data To Display</div>
     {{end}}
 {{end}}
