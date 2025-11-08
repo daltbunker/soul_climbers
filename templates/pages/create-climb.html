@@ -1,0 +1,43 @@
+{{define "content"}}
+    {{if eq .Part 1}}
+        {{template "climb-form-1" .}}
+    {{end}}
+    {{if eq .Part 2}}
+        {{template "climb-form-2" .}}
+    {{end}}
+    {{if eq .Part 3}}
+        {{template "climb-form-3" .}}
+    {{end}}
+    {{if eq .Part 4}}
+        {{template "climb-form-4" .}}
+    {{end}}
+
+    <script>
+        function closeSearchResult(elem) {
+            const searchResults = [...document.querySelectorAll(".search-results")];
+            searchResults.forEach(elem => {
+                elem?.remove();
+            });
+        }
+
+        function selectSearchResult(e, inputId, areaId) {
+            const input = document.getElementById(inputId);
+            input.value = e.textContent;
+
+            const areaIdInput = document.getElementById('area-id');
+            areaIdInput.value = areaId;
+
+            closeSearchResult();
+        }
+
+        // close if clicked outside search element
+        const searchResults = [...document.querySelectorAll('.search-results-container')];
+        searchResults.forEach(elem => {
+            document.addEventListener('click', event => {
+                if (!elem.contains(event.target)) {
+                    closeSearchResult();
+                };
+            });
+        })
+    </script>
+{{end}}

@@ -1,0 +1,42 @@
+{{define "climb-form-2"}}
+<div class="creat-climb-container">
+
+    <h2>Create Climb ({{.Part}} / 4)</h2>
+    <form hx-post="/v1/climbform/2" hx-target=".main-content" enctype="multipart/form-data" class="form-fields">
+
+        <div>Name: {{.Name}}</div>
+        <div>Route Type: {{.RouteType}}</div>
+        <div>Country: {{.Country}}</div>
+       
+        <div class="input-container"  style="position: relative;">
+            <label for="area">Area:</label>
+            <div>
+                <input hx-get="/v1/climb/search/area" 
+                    hx-trigger="input changed delay:500ms" 
+                    hx-target="#area-results" 
+                    type="search" 
+                    name="area"
+                    id="area" 
+                    value="{{.Area}}"
+                    autocomplete="off"
+                    maxlength="30">
+                {{if .AreaError}}
+                <span class="warning">{{.AreaError}}</span>
+                {{end}}
+            </div>
+            <input type="text" id="area-id" name="area-id" hidden>
+            <div id="area-results" class="search-results-container"></div>
+        </div>
+
+        <div class="line-up">
+            <a href="/climbform/1">
+                <button type="button" class="btn-secondary">back</button>
+            </a>
+            <button class="btn-primary">next</button><span style="padding-left: 0.5rem;" class="sub-text">*all fields
+                required</span>
+        </div>
+
+    </form>
+
+</div>
+{{end}}

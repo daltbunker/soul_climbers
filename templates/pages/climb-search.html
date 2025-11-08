@@ -1,0 +1,35 @@
+{{define "content"}}
+    <h2>Climb Search</h2>
+    <form hx-post="/v1/climbsearch" hx-target=".climb-search-results" enctype="multipart/form-data" class="form-fields">
+        <div class="input-container">
+            <label for="search-type">Search Type:</label>
+            <div>
+                <select type="text" name="search-type" id="search-type">
+                    <option value="climb" selected>climb</option>
+                    <option value="area">area</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-container" id="search-input-container">
+            <label for="climb-type">Climb Type:</label>
+            <div>
+                <select type="text" name="climb-type" id="climb-type">
+                    <option value="boulder" selected>boulder</option>
+                    <option value="route">route</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <input type="search" name="search-value">
+            <button class="btn-primary">search</button>
+        </div>
+    </form>
+    <div class="climb-search-results"></div>
+    <script>
+        const searchTypeInput = document.getElementById('search-type');
+        const climbTypeInput = document.getElementById('climb-type');
+        searchTypeInput.addEventListener('change', event => {
+            climbTypeInput.disabled = event.target.value === 'area';
+        });
+    </script>
+{{end}}

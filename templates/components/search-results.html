@@ -1,0 +1,9 @@
+{{define "search-results"}}
+    {{if .Results}}
+        <div class="search-results">
+                {{range $result := .Results}}
+                    <div class="search-result" onclick="selectSearchResult(this, '{{$.InputId}}', '{{$result.Id}}')">{{$result.Name}}</div>
+                {{end}}
+        </div>
+    {{end}}
+{{end}}

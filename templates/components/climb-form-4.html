@@ -1,0 +1,24 @@
+{{define "climb-form-4"}}
+<div class="creat-climb-container">
+
+    <h2>Create Climb ({{.Part}} / 4)</h2>
+    <form hx-post="/v1/climbform/4" hx-target=".main-content" enctype="multipart/form-data" class="form-fields">
+
+        <div>Name: {{.Name}}</div>
+        <div>Route Type: {{.RouteType}}</div>
+        <div>Country: {{.Country}}</div>
+        <div>Area: {{.Area}}</div>
+        <div>Sub-areas: {{range $index, $subArea := .SubAreas}}{{if $index}}, {{end}}{{$subArea}}{{end}}</div>
+
+        <div class="line-up">
+            <a href="/climbform/3">
+                <button type="button" class="btn-secondary">back</button>
+            </a>
+            <button class="btn-primary">submit</button><span style="padding-left: 0.5rem;" class="sub-text">*all fields
+                required</span>
+        </div>
+
+    </form>
+
+</div>
+{{end}}

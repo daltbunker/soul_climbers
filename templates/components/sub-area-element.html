@@ -1,0 +1,8 @@
+{{define "sub-area-element"}}
+    {{range $subArea := .}}
+        <div class="line-up">
+            <button class="btn-entity" type="button" hx-delete="/v1/climb/sub-area" hx-vals='{"sub-area": "{{$subArea}}"}' hx-target=".sub-area-elements">&minus;</button>
+            <span class="sub-area-text">{{$subArea}}</span>
+        </div>
+    {{end}}
+{{end}}

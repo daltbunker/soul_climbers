@@ -1,0 +1,55 @@
+{{define "climb-form-3"}}
+<div class="creat-climb-container">
+
+    <h2>Create Climb ({{.Part}} / 4)</h2>
+    <form hx-post="/v1/climbform/3" hx-target=".main-content" enctype="multipart/form-data" class="form-fields">
+
+        <div>Name: {{.Name}}</div>
+        <div>Route Type: {{.RouteType}}</div>
+        <div>Country: {{.Country}}</div>
+        <div>Area: {{.Area}}</div>
+
+        <div class="input-container" style="position: relative;">
+            <label for="sub-area">Sub-areas:</label>
+            <div class="line-up">
+                <input hx-get="/v1/climb/search/sub-area" 
+                    hx-trigger="input changed delay:500ms" 
+                    hx-target="#sub-area-results" 
+                    value="{{.SubArea}}"
+                    type="search" 
+                    name="sub-area"
+                    id="sub-area" 
+                    autocomplete="off"
+                    maxlength="30">
+                <input type="text" id="area-id" name="area-id" hidden>
+                <div id="sub-area-results" class="search-results-container"></div>
+                <span>
+                    <button hx-on::after-request="clearSubArea()" title="Add Sub-area" id="add-sub-area" class="btn-entity" type="button" hx-post="/v1/climb/sub-area" hx-target=".sub-area-elements">&plus;</button>
+                </span>
+                {{if .SubAreasError}}
+                <span class="warning">{{.SubAreasError}}</span>
+                {{end}}
+            </div>
+            <div class="sub-area-elements stack" style="row-gap: 0.5rem;">
+                {{template "sub-area-element" .SubAreas}}
+            </div>
+        </div>
+
+        <div class="line-up">
+            <a href="/climbform/2">
+                <button type="button" class="btn-secondary">back</button>
+            </a>
+            <button class="btn-primary">next</button><span style="padding-left: 0.5rem;" class="sub-text">*all fields
+                required</span>
+        </div>
+
+    </form>
+
+</div>
+<script>
+    function clearSubArea() {
+        const subAreaInput = document.getElementById('sub-area');
+        subAreaInput.value = '';
+    }
+</script>
+{{end}}

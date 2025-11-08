@@ -1,0 +1,63 @@
+{{define "climb-form-1"}}
+<div class="creat-climb-container">
+
+    <h2>Create Climb ({{.Part}} / 4)</h2>
+    <form hx-post="/v1/climbform/1" hx-target=".creat-climb-container" enctype="multipart/form-data" class="form-fields">
+
+        <div class="input-container">
+            <label for="climb-name">Name:</label>
+            <div>
+                <input type="text" value="{{.Name}}" name="climb-name" id="climb-name" maxlength="30">
+                {{if .NameError}}
+                <span class="warning">{{.NameError}}</span>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="input-container">
+            <label for="route-type">Route Type:</label>
+            <div>
+                <select type="text" name="route-type" id="route-type">
+                    <option value="">select a type</option>
+                    {{range $routeType := .RouteTypeOptions}}
+                    {{if $routeType.Selected}}
+                    <option value="{{$routeType.Name}}" selected>{{$routeType.Name}}</option>
+                    {{else}}
+                    <option value="{{$routeType.Name}}">{{$routeType.Name}}</option>
+                    {{end}}
+                    {{end}}
+                </select>
+                {{if .RouteTypeError}}
+                <span class="warning">{{.RouteTypeError}}</span>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="input-container">
+            <label for="country">Country:</label>
+            <div>
+                <select name="country" id="country">
+                    <option value="">select a country</option>
+                    {{range $country := .CountryOptions}}
+                    {{if $country.Selected}}
+                    <option value="{{$country.Name}}" selected>{{$country.Name}}</option>
+                    {{else}}
+                    <option value="{{$country.Name}}">{{$country.Name}}</option>
+                    {{end}}
+                    {{end}}
+                </select>
+                {{if .CountryError}}
+                <span class="warning">{{.CountryError}}</span>
+                {{end}}
+            </div>
+        </div>
+
+        <div>
+            <button class="btn-primary">next</button><span style="padding-left: 0.5rem;" class="sub-text">*all fields
+                required</span>
+        </div>
+
+    </form>
+
+</div>
+{{end}}

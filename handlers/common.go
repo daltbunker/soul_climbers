@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
 
 	"github.com/daltbunker/soul_climbers/types"
@@ -13,13 +14,12 @@ import (
 )
 
 var (
-	store *sessions.CookieStore
-	pages map[string]*template.Template
+	store     *sessions.CookieStore
+	pages     map[string]*template.Template
 	templates embed.FS
 )
 
 const SESSION_LIFESPAN = 60 * 60 * 24 * 7 // 7 Days
-
 
 func InitSession(key string) {
 	store = sessions.NewCookieStore([]byte(key))
@@ -39,9 +39,9 @@ func GetSessionUser(r *http.Request) (types.User, error) {
 		return types.User{}, nil
 	}
 	user := types.User{
-		Email: session.Values["email"].(string),
-		Username: session.Values["username"].(string),
-		Role: session.Values["role"].(string),
+		Email:     session.Values["email"].(string),
+		Username:  session.Values["username"].(string),
+		Role:      session.Values["role"].(string),
 		SoulScore: session.Values["soul_score"].(int32),
 	}
 
@@ -73,7 +73,7 @@ func UpdateSession(r *http.Request, w http.ResponseWriter, key string, value int
 		return err
 	}
 
-	session.Values[key] = value 
+	session.Values[key] = value
 	err = session.Save(r, w)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func UpdateSession(r *http.Request, w http.ResponseWriter, key string, value int
 }
 
 func NewDevSession(w http.ResponseWriter, r *http.Request) {
-	NewSession(r, w, types.User{Username: "garth", Email: "garth@aol.com", Role: "admin", SoulScore: 0})	
+	NewSession(r, w, types.User{Username: "garth", Email: "garth@aol.com", Role: "admin", SoulScore: 0})
 }
 
 func InitPages(t embed.FS) {
@@ -129,6 +129,14 @@ func renderComponent(w http.ResponseWriter, page string, name string, data inter
 }
 
 func sanitize(s string) string {
-    var p = bluemonday.UGCPolicy()
-    return p.Sanitize(s)
+	var p = bluemonday.UGCPolicy()
+	return p.Sanitize(s)
+}
+
+// Case insensitive. Matches if first char is the same AND any Unicode code points in query are within value.
+// example "j'eo" matches "Joe's"
+func fuzzyCompare(value string, query string) bool {
+	lowerValue := strings.ToLower(value)
+	lowerQuery := strings.ToLower(query)
+	return lowerValue[0] == lowerQuery[0] && strings.ContainsAny(lowerValue, lowerQuery)
 }

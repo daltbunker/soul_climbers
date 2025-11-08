@@ -510,6 +510,84 @@ func HandleGetPlacementTest(w http.ResponseWriter, r *http.Request) {
 	renderPage(pages["placementTest"], w, r, questionInputs)
 }
 
+func HandleGetClimbForm(w http.ResponseWriter, r *http.Request) {
+	sessionUser, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	formPartParam := chi.URLParam(r, "part")
+	formPart, err := strconv.Atoi(formPartParam) 
+	if err != nil {
+		log.Println(err)
+	}
+
+	if pages["climbForm"] == nil {
+		var err error
+		pages["climbForm"], err = template.ParseFS(templates, baseTemplate, "templates/pages/create-climb.html", "templates/components/climb-form-1.html", "templates/components/climb-form-2.html", "templates/components/climb-form-3.html", "templates/components/search-results.html", "templates/components/sub-area-element.html", "templates/components/climb-form-4.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+
+	climbDraft, err := db.GetClimbDraft(r, sessionUser.Username)
+	if err != nil && err != sql.ErrNoRows {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	climbForm := types.ClimbForm{}
+	climbForm.Part = formPart
+	climbForm.Name = climbDraft.Name
+
+	switch formPart {
+	case 1:
+		countries := []string{"United States", "France"}
+		climbForm.CountryOptions = newFormOptions(countries, climbDraft.Country)
+
+		routeTypes := []string{"boulder", "sport", "trad"}
+		climbForm.RouteTypeOptions = newFormOptions(routeTypes, climbDraft.RouteType) 
+	case 2:
+		climbForm.RouteType = climbDraft.RouteType
+		climbForm.Country = climbDraft.Country
+		climbForm.Area = climbDraft.Area
+	case 3:
+		climbForm.RouteType = climbDraft.RouteType
+		climbForm.Country = climbDraft.Country
+		climbForm.Area = climbDraft.Area
+		if climbDraft.SubAreas != "" {
+				climbForm.SubAreas = strings.Split(climbDraft.SubAreas, ",")
+		}
+	case 4:
+		climbForm.RouteType = climbDraft.RouteType
+		climbForm.Country = climbDraft.Country
+		climbForm.Area = climbDraft.Area
+		if climbDraft.SubAreas != "" {
+				climbForm.SubAreas = strings.Split(climbDraft.SubAreas, ",")
+		}
+	default: 
+		HandleNotFound(w, r)
+		return
+	}
+
+	renderPage(pages["climbForm"], w, r, climbForm)
+}
+
+func HandleGetClimbSearch(w http.ResponseWriter, r *http.Request) {
+	if pages["climb-search"] == nil {
+		var err error
+		pages["climb-search"], err = template.ParseFS(templates, baseTemplate, "templates/pages/climb-search.html", "templates/components/climb-search-results.html", "templates/components/area-search-results.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+
+	renderPage(pages["climb-search"], w, r, nil)
+}
+
 func setCookie(w http.ResponseWriter, name string, value string) {
 	cookie := &http.Cookie{
 		Name:  name,

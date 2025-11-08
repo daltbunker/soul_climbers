@@ -2,7 +2,11 @@
     <a href="/admin/blog">
         <button class="btn-primary">New Blog</button>
     </a>
-    {{range $b := .Blogs}}
-        {{template "admin-blog-card" $b}}
+    {{if .Blogs}}
+        {{range $b := .Blogs}}
+            {{template "admin-blog-card" $b}}
+        {{end}}
+    {{else}}
+        <div style="padding-top: 2rem;">No blogs yet, click "New Blog" to start a draft</div>
     {{end}}
 {{end}}

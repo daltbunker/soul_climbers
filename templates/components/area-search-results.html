@@ -1,0 +1,10 @@
+{{define "area-search-results"}}
+    {{range $result := .}}
+        <div>
+            {{$result.Name}}
+            {{if $result.SubArea}}
+                - {{$result.SubArea}}
+            {{end}}
+        </div>
+    {{end}}
+{{end}}

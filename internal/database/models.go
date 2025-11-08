@@ -5,10 +5,35 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type Area struct {
+	AreaID    int32
+	Name      string
+	Country   string
+	SubAreas  string
+	CreatedBy int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type Ascent struct {
+	AscentID   int32
+	ClimbID    int32
+	UserID     int32
+	Grade      string
+	Weight     string
+	Comment    string
+	Attempts   string
+	AscentDate time.Time
+	CreatedBy  int32
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
 
 type Blog struct {
 	BlogID      int32
@@ -27,6 +52,32 @@ type BlogImg struct {
 	BlogID    int32
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type Climb struct {
+	ClimbID   int32
+	AreaID    int32
+	Name      string
+	Type      string
+	CreatedBy int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type ClimbDraft struct {
+	CreatedBy int32
+	Name      string
+	Country   string
+	AreaID    sql.NullInt32
+	Area      sql.NullString
+	SubAreas  sql.NullString
+	Type      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type Country struct {
+	Name string
 }
 
 type PlacementTest struct {

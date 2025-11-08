@@ -44,7 +44,7 @@ func main() {
 
 	srv := &http.Server{
 		Handler: router,
-		Addr: ":" + port,
+		Addr:    ":" + port,
 	}
 
 	log.Printf("Server running on port %v", port)
@@ -79,7 +79,7 @@ func registerRoutes(r *chi.Mux) {
 		r.Get("/v1/blog/{id}/{imgName}", handlers.GetBlogImg)
 	})
 
-	// protected (paths with "/admin" are restricted to admin role)
+	// protected for 'user' and 'admin' (paths with "/admin" are restricted to admin role)
 	r.Group(func(r chi.Router) {
 		r.Use(handlers.SessionMiddleware)
 
@@ -93,11 +93,19 @@ func registerRoutes(r *chi.Mux) {
 		r.Post("/admin/blog/preview/{id}", handlers.HandleUpdateBlogPreview) // HTML forms only allow GET and POST
 		r.Post("/admin/blog/preview", handlers.HandleNewBlogPreview)
 		r.Post("/admin/blog/{id}", handlers.HandlePublishBlog) // HTML forms only allow GET and POST
+		r.Get("/climbform/{part}", handlers.HandleGetClimbForm)
+		r.Get("/climbsearch", handlers.HandleGetClimbSearch)
 
 		// data routes
 		r.Get("/v1/admin/blog/{id}/{imgName}", handlers.GetBlogImg)
 		r.Delete("/v1/admin/blog/{id}/thumbnail", handlers.DeleteBlogImg)
 		r.Post("/v1/placement-test", handlers.HandleSubmitPlacementTest)
 		r.Delete("/v1/admin/blog/{id}", handlers.DeleteBlog)
+		r.Get("/v1/climb/search/area", handlers.SearchClimbArea)
+		r.Get("/v1/climb/search/sub-area", handlers.SearchSubArea)
+		r.Post("/v1/climbform/{part}", handlers.HandleClimbForm)
+		r.Post("/v1/climb/sub-area", handlers.HandleAddSubArea)
+		r.Delete("/v1/climb/sub-area", handlers.HandleDeleteSubArea)
+		r.Post("/v1/climbsearch", handlers.ClimbSearch)
 	})
 }

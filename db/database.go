@@ -375,3 +375,230 @@ func DeleteBlog(r *http.Request, id int32) error {
 	_, err := DB.DeleteBlog(r.Context(), id)
 	return err
 }
+
+func GetAllAreas(r *http.Request) ([]types.Area, error) {
+	dbAreas, err := DB.GetAllAreas(r.Context())
+	if err != nil {
+		return []types.Area{}, err
+	}
+
+	areas := []types.Area{}
+	for _, a := range dbAreas {
+		area := types.Area{
+			AreaId: a.AreaID,
+			Name: a.Name,
+			Country: a.Country,
+			SubAreas: a.SubAreas,
+		}	
+		areas = append(areas, area)
+	} 
+
+	return areas, nil
+}
+
+func SearchAreas(r *http.Request, query string) ([]types.Area, error) {
+	dbAreas, err := DB.SearchAreas(r.Context(), query)
+	if err != nil {
+		return []types.Area{}, err
+	}
+
+	areas := []types.Area{}
+	for _, a := range dbAreas {
+		area := types.Area{
+			AreaId: a.AreaID,
+			Name: a.Name,
+			Country: a.Country,
+			SubAreas: a.SubAreas,
+		}	
+		areas = append(areas, area)
+	} 
+
+	return areas, nil
+}
+
+func SearchSubAreas(r *http.Request, query string) ([]types.Area, error) {
+	dbSubAreas, err := DB.SearchSubAreas(r.Context(), query)
+	if err != nil {
+		return []types.Area{}, err
+	}
+
+	subAreas := []types.Area{}
+	for _, a := range dbSubAreas {
+		// would do in query, but sqlc is failing to generate when I add the where clause
+		if a.SubAreaSml.(float64) > 0.3 {
+			subArea := types.Area{
+				AreaId: a.AreaID,
+				Name: a.Name,
+				SubArea: a.SubArea.(string),
+			}	
+			subAreas = append(subAreas, subArea)
+		}
+	} 
+
+	return subAreas, nil
+}
+
+// Insert or Update draft if conflict on created_by 
+func CreateClimbDraft(r *http.Request, climbDraft types.ClimbDraft, username string) error {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return err
+	}
+
+	areaId := sql.NullInt32{Int32: climbDraft.AreaId, Valid: false}
+	area := sql.NullString{String: climbDraft.Area, Valid: false}
+	subAreas := sql.NullString{String: climbDraft.SubAreas, Valid: false}
+	if climbDraft.AreaId > 0 {
+		areaId.Valid = true
+	}
+	if climbDraft.Area != "" {
+		area.Valid = true
+	}
+	if climbDraft.SubAreas != "" {
+		subAreas.Valid = true
+	}
+
+	_, err = DB.CreateClimbDraft(r.Context(), database.CreateClimbDraftParams{
+		CreatedBy: user.UsersID,
+		Name: climbDraft.Name,
+		Country: climbDraft.Country,
+		Type: climbDraft.RouteType,
+		AreaID: areaId,
+		Area: area,
+		SubAreas: subAreas,
+	})
+
+	return err 
+}
+
+func GetClimbDraft(r *http.Request, username string) (types.ClimbDraft, error) {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return types.ClimbDraft{}, err
+	}
+
+	dbClimbDraft, err := DB.GetClimbDraft(r.Context(), user.UsersID)
+	if err != nil {
+		return types.ClimbDraft{}, err
+	}
+
+	climbDraft := types.ClimbDraft{
+		Name: dbClimbDraft.Name,
+		Country: dbClimbDraft.Country,
+		RouteType: dbClimbDraft.Type,
+		AreaId: dbClimbDraft.AreaID.Int32,
+		Area: dbClimbDraft.Area.String,
+		SubAreas: dbClimbDraft.SubAreas.String,
+	}
+
+	return climbDraft, nil
+}
+
+func CreateClimbWithArea(r *http.Request, climbDraft types.ClimbDraft, username string) error {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return err
+	}
+
+	if climbDraft.AreaId == 0 {
+		dbArea, err := DB.CreateArea(r.Context(), database.CreateAreaParams{
+			CreatedBy: user.UsersID,
+			Name: climbDraft.Area,
+			SubAreas: climbDraft.SubAreas,
+			Country: climbDraft.Country,
+		})
+		if err != nil {
+			return err
+
+		}
+		climbDraft.AreaId = dbArea.AreaID
+	} else {
+		area, err := DB.GetArea(r.Context(), climbDraft.AreaId)
+		if err != nil {
+			return err	
+		}
+		dbSubAreas := strings.Split(area.SubAreas, ",")
+		draftSubAreas := strings.Split(climbDraft.SubAreas, ",")
+		hasNewSubAreas := false
+		for i := 0; i < len(dbSubAreas); i++ {
+			for j := 0; j < len(draftSubAreas); j++ {
+				if dbSubAreas[i] != draftSubAreas[j] {
+					hasNewSubAreas = true
+					dbSubAreas = append(dbSubAreas, draftSubAreas[i])
+				}
+			}
+		}
+		if hasNewSubAreas {
+			_, err := DB.UpdateSubAreas(r.Context(), database.UpdateSubAreasParams{
+				SubAreas: strings.Join(dbSubAreas, ","),
+				AreaID: area.AreaID,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+
+	_, err = DB.CreateClimb(r.Context(), database.CreateClimbParams{
+		CreatedBy: user.UsersID,
+		Name: climbDraft.Name,
+		Type: climbDraft.RouteType,
+		AreaID: climbDraft.AreaId,
+	})
+
+	return err
+}
+
+func DeleteClimbDraft(r *http.Request, username string) error {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return err
+	}
+
+	_, err = DB.DeleteClimbDraft(r.Context(), user.UsersID)
+
+	return err
+}
+
+func GetAllClimbs(r *http.Request, climbType string) ([]types.Climb, error) {
+	dbClimbs, err := DB.GetAllClimbs(r.Context(), climbType)
+	if err != nil {
+		return []types.Climb{}, err
+	}
+
+	climbs := []types.Climb{}
+	for _, c := range dbClimbs {
+		climb := types.Climb{
+			AreaId: c.AreaID,
+			Name: c.Name,
+			Type: c.Type,
+		}
+		climbs = append(climbs, climb)
+	}
+
+
+	return climbs, nil 
+}
+
+func SearchClimbs(r *http.Request, climbType string, query string) ([]types.Climb, error) {
+	dbClimbs, err := DB.SearchClimbs(r.Context(), database.SearchClimbsParams{
+		Type: climbType,
+		Name: query,
+	})
+	if err != nil {
+		return []types.Climb{}, err
+	}
+
+	climbs := []types.Climb{}
+	for _, c := range dbClimbs {
+		climb := types.Climb{
+			AreaId: c.AreaID,
+			Name: c.Name,
+			Type: c.Type,
+		}
+		climbs = append(climbs, climb)
+	}
+
+	return climbs, nil 
+}
