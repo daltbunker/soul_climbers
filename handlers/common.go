@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"text/template"
 
 	"github.com/daltbunker/soul_climbers/types"
@@ -131,12 +130,4 @@ func renderComponent(w http.ResponseWriter, page string, name string, data inter
 func sanitize(s string) string {
 	var p = bluemonday.UGCPolicy()
 	return p.Sanitize(s)
-}
-
-// Case insensitive. Matches if first char is the same AND any Unicode code points in query are within value.
-// example "j'eo" matches "Joe's"
-func fuzzyCompare(value string, query string) bool {
-	lowerValue := strings.ToLower(value)
-	lowerQuery := strings.ToLower(query)
-	return lowerValue[0] == lowerQuery[0] && strings.ContainsAny(lowerValue, lowerQuery)
 }

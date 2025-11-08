@@ -56,18 +56,16 @@ func ClimbSearch(w http.ResponseWriter, r *http.Request) {
 
 func SearchClimbArea(w http.ResponseWriter, r *http.Request) {
 	areaQuery := r.URL.Query().Get("area")
-	allAreas, err := db.GetAllAreas(r)
+	areaResults, err := db.SearchAreas(r, areaQuery)
 	if err != nil {
 		HandleServerError(w, r, err)
 		return
 	}
 
 	results := []types.Result{}
-	for i := 0; i < len(allAreas); i++ {
-		if areaQuery != "" && fuzzyCompare(allAreas[i].Name, areaQuery) {
-			result := types.Result{Name: allAreas[i].Name, Id: int(allAreas[i].AreaId)}
-			results = append(results, result)
-		}
+	for i := 0; i < len(areaResults); i++ {
+		result := types.Result{Name: areaResults[i].Name, Id: int(areaResults[i].AreaId)}
+		results = append(results, result)
 	}
 
 	searchResults := types.SearchResult{Results: results, InputId: "area"}
@@ -88,7 +86,7 @@ func SearchSubArea(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subAreaQuery := r.URL.Query().Get("sub-area")
-	allAreas, err := db.GetAllAreas(r)
+	subAreaResults, err := db.SearchSubAreas(r, subAreaQuery)
 
 	if err != nil {
 		HandleServerError(w, r, err)
@@ -96,20 +94,10 @@ func SearchSubArea(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results := []types.Result{}
-	for i := 0; i < len(allAreas); i++ {
-		if allAreas[i].Name != climbDraft.Area {
-			continue
-		}
-		splitSubAreas := strings.Split(allAreas[i].SubAreas, ",")
-		for i := 0; i < len(splitSubAreas); i++ {
-			// Split can return empty strings, eg. subArea is empty string
-			if splitSubAreas[i] == "" {
-				continue
-			}
-			if subAreaQuery != "" && fuzzyCompare(splitSubAreas[i], subAreaQuery) {
-				result := types.Result{Name: splitSubAreas[i], Id: int(allAreas[i].AreaId)}
-				results = append(results, result)
-			}
+	for i := 0; i < len(subAreaResults); i++ {
+		if subAreaResults[i].Name == climbDraft.Area {
+			result := types.Result{Name: subAreaResults[i].SubArea, Id: int(subAreaResults[i].AreaId)}
+			results = append(results, result)
 		}
 	}
 

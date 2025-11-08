@@ -524,7 +524,7 @@ func CreateClimbWithArea(r *http.Request, climbDraft types.ClimbDraft, username 
 			for j := 0; j < len(draftSubAreas); j++ {
 				if dbSubAreas[i] != draftSubAreas[j] {
 					hasNewSubAreas = true
-					dbSubAreas = append(dbSubAreas, draftSubAreas[i])
+					dbSubAreas = append(dbSubAreas, draftSubAreas[j])
 				}
 			}
 		}
