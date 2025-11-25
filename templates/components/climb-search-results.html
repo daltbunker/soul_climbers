@@ -1,6 +1,6 @@
 {{define "climb-search-results"}}
     {{range $result := .}}
-        <a href="/climb/{{.ClimbId}}">
+        <a href="/climb/{{.Type}}/{{.ClimbId}}">
             <div>
                 {{$result.Name}}
             </div>

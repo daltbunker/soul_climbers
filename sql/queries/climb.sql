@@ -4,7 +4,7 @@ FROM area a
 WHERE a.area_id = $1;
 
 -- name: GetClimb :one
-SELECT c.climb_id, c.name, c.area_id, c.sub_areas
+SELECT c.climb_id, c.name, c.area_id, c.sub_areas, c.type
 FROM climb c 
 WHERE c.climb_id = $1;
 
@@ -71,6 +71,6 @@ FROM sub_areas sa --WHERE sa.sub_area % $1
 ORDER BY similarity(sa.sub_area, $1) DESC, sa.sub_area;
 
 -- name: GetClimbsByArea :many
-SELECT c.climb_id, c.name, c.sub_areas, c.area_id
+SELECT c.climb_id, c.name, c.sub_areas, c.area_id, c.type
 FROM climb c
 WHERE c.area_id = $1;

@@ -1,7 +1,6 @@
 {{define "content"}}
     <h2>Log Ascent</h2>
-    <form hx-post="/v1/ascent?climbId={{.ClimbId}}" enctype="multipart/form-data" class="form-fields">
+    <form hx-post="/v1/ascent?climbId={{.ClimbId}}&climbType={{.ClimbType}}" enctype="multipart/form-data" class="form-fields">
         {{template "ascent-form" .}}
     </form>
-
 {{end}}

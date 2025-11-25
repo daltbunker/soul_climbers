@@ -1,15 +1,21 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
+	"time"
 
 	"github.com/daltbunker/soul_climbers/db"
 	"github.com/daltbunker/soul_climbers/types"
+	"github.com/daltbunker/soul_climbers/utils"
 )
 
 func AddAscent(w http.ResponseWriter, r *http.Request) {
+	climbType := r.URL.Query().Get("climbType")
+	climbIdStr := r.URL.Query().Get("climbId")
 
 	date := sanitize(r.FormValue("date"))
 	grade := sanitize(r.FormValue("grade"))
@@ -17,8 +23,6 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 	attempts := sanitize(r.FormValue("attempts"))
 	weight := sanitize(r.FormValue("weight"))
 	comment := sanitize(r.FormValue("comment"))
-	//TODO: add to form
-	// ascentType := sanitize(r.FormValue("ascentType"))
 
 	dateError := ""
 	gradeError := ""
@@ -26,42 +30,57 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 	attemptError := ""
 	weightError := ""
 	commentError := ""
+
+	ratings := utils.GetAscentRatings()
+	weights := utils.GetAscentWeights() 
+	attemptOptions := utils.GetAscentAttempts()
+	if climbType != "boulder" {
+		attemptOptions = append(attemptOptions, "onsight")
+	}
+
+	clientErrors := []string{}
 	formError := false
 
-	//TODO: validate inputs
-
+	_, err := time.Parse("2006-01-02", date)
 	if date == "" {
 		formError = true 
 		dateError = "required"
+	} else if err != nil {
+		clientErrors = append(clientErrors, "invalid date format, expected yyyy-mm-dd") 
 	}
 	if grade == "" {
 		formError = true 
 		gradeError = "required"
+	} else if len(grade) != 7 || string(grade[0]) != "#" {
+		clientErrors = append(clientErrors, "invalid grade") 
 	}
 	if rating == "" {
 		formError = true 
 		ratingError = "required"
+	} else if !slices.Contains(ratings, rating) {
+		clientErrors = append(clientErrors, "invalid rating") 
 	}
 	if attempts == "" {
 		formError = true 
 		attemptError = "required"
+	} else if !slices.Contains(attemptOptions, attempts) {
+		clientErrors = append(clientErrors, "invalid attempts") 
 	}
 	if weight == "" {
 		formError = true 
 		weightError = "required"
+	} else if !slices.Contains(weights, weight) {
+		clientErrors = append(clientErrors, "invalid weight") 
 	}
 	if len(comment) > 500 {
-		formError = true 
-		commentError = "exceeded max 500 characters"
+		clientErrors = append(clientErrors, "comment exceeded max 500 characters") 
 	}
-
+	if len(clientErrors) > 0 {
+		log.Printf("%v", clientErrors)
+		HandleClientError(w, fmt.Errorf("invalid input"))
+		return
+	}
 	if formError {
-
-		//TODO: make constant / reusable
-		ratings := []string{"*", "**", "***", "****"}
-		weights := []string{"over 200 pounds", "under 200 pounds"}
-		attemptOptions := []string{"flash", "soft second go", "onsight", "more than 2 tries"}
-		
 		ascentForm := types.AscentForm{
 			Date: date,
 			DateError: dateError,
@@ -81,7 +100,6 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	climbIdStr := r.URL.Query().Get("climbId")
 	climbId, err := strconv.Atoi(climbIdStr)
 	if err != nil {
 		log.Printf("Climb id must be type int: %v", err)
@@ -118,5 +136,5 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Redirect", "/climb/"+climbIdStr)
+	w.Header().Set("HX-Redirect", "/climb/"+climbType+"/"+climbIdStr)
 }

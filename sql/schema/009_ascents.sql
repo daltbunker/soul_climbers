@@ -4,7 +4,6 @@ CREATE TABLE ascent(
     climb_id INT NOT NULL REFERENCES climb(climb_id),
     grade TEXT NOT NULL,
     rating TEXT NOT NULL,
-    ascent_type TEXT NOT NULL,
     attempts TEXT NOT NULL,
     over_200_pounds BOOLEAN NOT NULL,
     comment TEXT,

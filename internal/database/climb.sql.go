@@ -179,7 +179,7 @@ func (q *Queries) GetArea(ctx context.Context, areaID int32) (GetAreaRow, error)
 }
 
 const getClimb = `-- name: GetClimb :one
-SELECT c.climb_id, c.name, c.area_id, c.sub_areas
+SELECT c.climb_id, c.name, c.area_id, c.sub_areas, c.type
 FROM climb c 
 WHERE c.climb_id = $1
 `
@@ -189,6 +189,7 @@ type GetClimbRow struct {
 	Name     string
 	AreaID   int32
 	SubAreas sql.NullString
+	Type     string
 }
 
 func (q *Queries) GetClimb(ctx context.Context, climbID int32) (GetClimbRow, error) {
@@ -199,6 +200,7 @@ func (q *Queries) GetClimb(ctx context.Context, climbID int32) (GetClimbRow, err
 		&i.Name,
 		&i.AreaID,
 		&i.SubAreas,
+		&i.Type,
 	)
 	return i, err
 }
@@ -235,7 +237,7 @@ func (q *Queries) GetClimbDraft(ctx context.Context, createdBy int32) (GetClimbD
 }
 
 const getClimbsByArea = `-- name: GetClimbsByArea :many
-SELECT c.climb_id, c.name, c.sub_areas, c.area_id
+SELECT c.climb_id, c.name, c.sub_areas, c.area_id, c.type
 FROM climb c
 WHERE c.area_id = $1
 `
@@ -245,6 +247,7 @@ type GetClimbsByAreaRow struct {
 	Name     string
 	SubAreas sql.NullString
 	AreaID   int32
+	Type     string
 }
 
 func (q *Queries) GetClimbsByArea(ctx context.Context, areaID int32) ([]GetClimbsByAreaRow, error) {
@@ -261,6 +264,7 @@ func (q *Queries) GetClimbsByArea(ctx context.Context, areaID int32) ([]GetClimb
 			&i.Name,
 			&i.SubAreas,
 			&i.AreaID,
+			&i.Type,
 		); err != nil {
 			return nil, err
 		}

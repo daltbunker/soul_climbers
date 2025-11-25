@@ -14,6 +14,7 @@ import (
 
 	"github.com/daltbunker/soul_climbers/db"
 	"github.com/daltbunker/soul_climbers/types"
+	"github.com/daltbunker/soul_climbers/utils"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
@@ -669,6 +670,28 @@ func HandleGetClimb(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleGetAscentForm(w http.ResponseWriter, r *http.Request) {
+	user, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	climbType := chi.URLParam(r, "type")
+	paramClimbId := chi.URLParam(r, "id")
+	climbId, err := strconv.Atoi(paramClimbId)	
+	if err != nil {
+		HandleClientError(w, fmt.Errorf("invalid param 'id': %v", climbId))
+		return
+	}
+
+	prevAscent := types.Ascent{}
+	ascents, err := db.GetAscentsByClimb(r, int32(climbId))
+	for _, ascent := range ascents {
+		if ascent.CreatedBy == user.Username {
+			prevAscent = ascent	
+		}
+	}
+
 	if pages["ascent-form"] == nil {
 		var err error
 		pages["ascent-form"], err = template.ParseFS(templates, baseTemplate, "templates/pages/ascent-form.html", "templates/components/ascent-form.html")
@@ -678,22 +701,32 @@ func HandleGetAscentForm(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	paramClimbId := chi.URLParam(r, "id")
-	climbId, err := strconv.Atoi(paramClimbId)	
-	if err != nil {
-		HandleClientError(w, fmt.Errorf("invalid param 'id': %v", climbId))
-		return
+	ratings := utils.GetAscentRatings()
+	weights := utils.GetAscentWeights() 
+	attempts:= utils.GetAscentAttempts()
+	if climbType != "boulder" {
+		attempts = append(attempts, "onsight")
 	}
 
-	ratings := []string{"*", "**", "***", "****"}
-	weights := []string{"over 200 pounds", "under 200 pounds"}
-	attempts := []string{"flash", "soft second go", "onsight", "more than 2 tries"}
-
+	prevAscentWeightOption := ""
+	if prevAscent.Over200Pounds == true {
+		prevAscentWeightOption = weights[0]
+	} else if prevAscent.AscentDate != "" {
+		prevAscentWeightOption = weights[1]
+	}
+	if prevAscent.Grade == "" {
+		prevAscent.Grade = "#ffffff"
+	}
 	ascentForm := types.AscentForm{
+		NewAscent: prevAscent.AscentDate == "",
 		ClimbId: climbId,
-		RatingOptions: newFormOptions(ratings, ""),
-		WeightOptions: newFormOptions(weights, ""),
-		AttemptOptions: newFormOptions(attempts, ""),
+		ClimbType: climbType,
+		RatingOptions: newFormOptions(ratings, prevAscent.Rating),
+		WeightOptions: newFormOptions(weights, prevAscentWeightOption),
+		AttemptOptions: newFormOptions(attempts, prevAscent.Attempts),
+		Grade: prevAscent.Grade,
+		Date: prevAscent.AscentDate,
+		Comment: prevAscent.Comment,
 	}
 	renderPage(pages["ascent-form"], w, r, ascentForm)
 }

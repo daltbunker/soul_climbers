@@ -585,6 +585,7 @@ func GetClimbsByArea(r *http.Request, areaId int32, subArea string) ([]types.Cli
 			ClimbId: c.ClimbID,
 			AreaId: c.AreaID,
 			Name: c.Name,
+			Type: c.Type,
 		}
 		subAreas := strings.Split(c.SubAreas.String, ",")
 		if (subArea == "") {
@@ -627,6 +628,7 @@ func GetClimb(r *http.Request, climbId int32) (types.Climb, error) {
 		ClimbId: dbClimb.ClimbID,
 		AreaId: dbClimb.AreaID,
 		SubAreas: dbClimb.SubAreas.String,
+		Type: dbClimb.Type,
 	}
 
 	return climb, nil
@@ -643,7 +645,6 @@ func GetAscentsByClimb(r *http.Request, climbId int32) ([]types.Ascent, error) {
 		ascent := types.Ascent{
 			Grade: a.Grade, 
 			Rating: a.Rating, 
-			AscentType: a.AscentType, 
 			AscentDate: a.AscentDate, 
 			Over200Pounds: a.Over200Pounds, 
 			Attempts: a.Attempts, 
@@ -670,7 +671,6 @@ func CreateAscent(r *http.Request, ascent types.Ascent) error {
 	_, err = DB.CreateOrUpdateAscent(r.Context(), database.CreateOrUpdateAscentParams{
 		Grade: ascent.Grade,
 		Rating: ascent.Rating,
-		AscentType: ascent.AscentType,
 		AscentDate: ascentDate,
 		Attempts: ascent.Attempts,
 		Over200Pounds: ascent.Over200Pounds,

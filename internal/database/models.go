@@ -25,7 +25,6 @@ type Ascent struct {
 	ClimbID       int32
 	Grade         string
 	Rating        string
-	AscentType    string
 	Attempts      string
 	Over200Pounds bool
 	Comment       sql.NullString

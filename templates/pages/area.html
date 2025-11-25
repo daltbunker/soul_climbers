@@ -4,7 +4,7 @@
     <br>
     <!-- TODO: could use climb-search-results compnent? -->
     {{range $result := .Climbs}}
-    <a href="/climb/{{$result.ClimbId}}">
+    <a href="/climb/{{$result.Type}}/{{$result.ClimbId}}">
         <div>
             {{$result.Name}}
         </div>

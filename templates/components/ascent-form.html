@@ -3,7 +3,7 @@
         <label for="date">Date:
         {{if .DateError}} <span class="warning">*{{.DateError}}</span> {{end}}
         </label>
-        <input type="date" name="date" id="date" value="{{.Date}}">
+        <input style="max-width: 120px;" type="date" name="date" id="date" value="{{.Date}}">
     </div>
 
     <div class="input-container">
@@ -37,7 +37,7 @@
         </label>
         <div>
             <select type="text" name="attempts" id="attempts">
-                <option value="">select an option</option>
+                <option value="">select an attempt</option>
                 {{range $attempt := .AttemptOptions}}
                 {{if $attempt.Selected}}
                 <option value="{{$attempt.Name}}" selected>{{$attempt.Name}}</option>
@@ -71,11 +71,16 @@
         <label for="comment">Comment:
         {{if .CommentError}} <span class="warning">*{{.CommentError}}</span> {{end}}
         </label>
-        <textarea rows="5" name="comment" id="comment" maxlength="500" value="{{.Comment}}"></textarea>
+        <textarea rows="8" name="comment" id="comment" maxlength="500">{{.Comment}}</textarea>
     </div>
     
-    <div>
+    <div class="line-up">
+        <a href="/climb/{{.ClimbType}}/{{.ClimbId}}"><button type="button" class="btn-secondary">cancel</button></a>
+        {{if .NewAscent}}
         <button class="btn-primary">submit</button>
+        {{else}}
+        <button class="btn-primary">update</button>
+        {{end}}
     </div>
     
 {{end}}

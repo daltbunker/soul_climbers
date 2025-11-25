@@ -1,7 +1,9 @@
 package types
 
 type AscentForm struct {
+	NewAscent bool
 	ClimbId int
+	ClimbType string
 	Date string
 	DateError string 
 	Grade string
@@ -20,7 +22,6 @@ type Ascent struct {
 	ClimbId int
 	Grade string
 	Rating string 
-	AscentType string 
 	AscentDate string 
 	Over200Pounds bool
 	Attempts string 
