@@ -35,20 +35,6 @@ CREATE TABLE climb_draft (
     updated_at TIMESTAMP NOT NULL DEFAULT current_date
 );
 
-create TABLE ascent (
-    ascent_id SERIAL PRIMARY KEY,
-    climb_id INT NOT NULL REFERENCES climb(climb_id),
-    user_id INT NOT NULL REFERENCES users(users_id),
-    grade TEXT NOT NULL,
-    weight TEXT NOT NULL,
-    comment TEXT NOT NULL,
-    attempts TEXT NOT NULL,
-    ascent_date TIMESTAMP NOT NULL,
-    created_by INT NOT NULL REFERENCES users(users_id),
-    created_at TIMESTAMP NOT NULL DEFAULT current_date,
-    updated_at TIMESTAMP NOT NULL DEFAULT current_date
-);
-
 INSERT INTO COUNTRY(name) VALUES('United States');
 INSERT INTO COUNTRY(NAME) VALUES('Afghanistan');
 INSERT INTO COUNTRY(NAME) VALUES('Albania');

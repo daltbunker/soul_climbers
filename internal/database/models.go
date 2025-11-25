@@ -22,17 +22,17 @@ type Area struct {
 }
 
 type Ascent struct {
-	AscentID   int32
-	ClimbID    int32
-	UserID     int32
-	Grade      string
-	Weight     string
-	Comment    string
-	Attempts   string
-	AscentDate time.Time
-	CreatedBy  int32
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ClimbID       int32
+	Grade         string
+	Rating        string
+	AscentType    string
+	Attempts      string
+	Over200Pounds bool
+	Comment       sql.NullString
+	AscentDate    time.Time
+	CreatedBy     int32
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 type Blog struct {
@@ -62,6 +62,7 @@ type Climb struct {
 	CreatedBy int32
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	SubAreas  sql.NullString
 }
 
 type ClimbDraft struct {

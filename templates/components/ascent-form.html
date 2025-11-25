@@ -1,0 +1,81 @@
+{{define "ascent-form"}}
+    <div class="input-container">
+        <label for="date">Date:
+        {{if .DateError}} <span class="warning">*{{.DateError}}</span> {{end}}
+        </label>
+        <input type="date" name="date" id="date" value="{{.Date}}">
+    </div>
+
+    <div class="input-container">
+        <label for="grade">Grade:
+        {{if .GradeError}} <span class="warning">*{{.GradeError}}</span> {{end}}
+        </label>
+        <input type="color" name="grade" id="grade" value="{{.Grade}}">
+    </div>
+
+    <div class="input-container">
+        <label for="rating">Rating:
+        {{if .RatingError}} <span class="warning">*{{.RatingError}}</span> {{end}}
+        </label>
+        <div>
+            <select type="text" name="rating" id="rating">
+                <option value="">select a rating</option>
+                {{range $rating := .RatingOptions}}
+                {{if $rating.Selected}}
+                <option value="{{$rating.Name}}" selected>{{$rating.Name}}</option>
+                {{else}}
+                <option value="{{$rating.Name}}">{{$rating.Name}}</option>
+                {{end}}
+                {{end}}
+            </select>
+        </div>
+    </div>
+    
+    <div class="input-container">
+        <label for="attempts">Attempts:
+        {{if .AttemptError}} <span class="warning">*{{.AttemptError}}</span> {{end}}
+        </label>
+        <div>
+            <select type="text" name="attempts" id="attempts">
+                <option value="">select an option</option>
+                {{range $attempt := .AttemptOptions}}
+                {{if $attempt.Selected}}
+                <option value="{{$attempt.Name}}" selected>{{$attempt.Name}}</option>
+                {{else}}
+                <option value="{{$attempt.Name}}">{{$attempt.Name}}</option>
+                {{end}}
+                {{end}}
+            </select>
+        </div>
+    </div>
+    
+    <div class="input-container">
+        <label for="weight">Weight:
+        {{if .WeightError}} <span class="warning">*{{.WeightError}}</span> {{end}}
+        </label>
+        <div>
+            <select type="text" name="weight" id="attempts">
+                <option value="">select a weight</option>
+                {{range $weight := .WeightOptions}}
+                {{if $weight.Selected}}
+                <option value="{{$weight.Name}}" selected>{{$weight.Name}}</option>
+                {{else}}
+                <option value="{{$weight.Name}}">{{$weight.Name}}</option>
+                {{end}}
+                {{end}}
+            </select>
+        </div>
+    </div>
+    
+    <div class="input-container">
+        <label for="comment">Comment:
+        {{if .CommentError}} <span class="warning">*{{.CommentError}}</span> {{end}}
+        </label>
+        <textarea rows="5" name="comment" id="comment" maxlength="500" value="{{.Comment}}"></textarea>
+    </div>
+    
+    <div>
+        <button class="btn-primary">submit</button>
+    </div>
+    
+{{end}}

@@ -1,0 +1,25 @@
+{{define "content"}}
+
+<h2>{{.Climb.Name}}</h2>
+<div>Country: {{.Area.Country}}</div>
+<div>Area: {{.Area.Name}}</div>
+{{if .Climb.SubAreas}}
+    <div>Sub-Areas: {{.Climb.SubAreas}}</div>
+{{end}}
+<br>
+
+<div>Ascents</div>
+{{range $ascent := .Ascents}}
+    <div>User: {{$ascent.CreatedBy}}</div>
+    <div>Grade: <div style="width: 20px; height: 20px; display: inline-block; background-color: {{$ascent.Grade}};"></div></div>
+    <div>Rating: {{$ascent.Rating}}</div>
+    <div>Date: {{$ascent.AscentDate}}</div>
+    <div>Attempts: {{$ascent.Attempts}}</div>
+    <div>Comment: {{$ascent.Comment}}</div>
+    <div>Over 200 pounds: {{if $ascent.Over200Pounds}} yes {{else}} no {{end}}</div>
+    <br>
+{{end}}
+
+<button class="btn-primary"><a href="/climb/{{.Climb.ClimbId}}/log">Log Ascent</a></button>
+
+{{end}}

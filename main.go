@@ -95,6 +95,9 @@ func registerRoutes(r *chi.Mux) {
 		r.Post("/admin/blog/{id}", handlers.HandlePublishBlog) // HTML forms only allow GET and POST
 		r.Get("/climbform/{part}", handlers.HandleGetClimbForm)
 		r.Get("/climbsearch", handlers.HandleGetClimbSearch)
+		r.Get("/area/{id}", handlers.HandleGetArea)
+		r.Get("/climb/{id}", handlers.HandleGetClimb)
+		r.Get("/climb/{id}/log", handlers.HandleGetAscentForm)
 
 		// data routes
 		r.Get("/v1/admin/blog/{id}/{imgName}", handlers.GetBlogImg)
@@ -107,5 +110,6 @@ func registerRoutes(r *chi.Mux) {
 		r.Post("/v1/climb/sub-area", handlers.HandleAddSubArea)
 		r.Delete("/v1/climb/sub-area", handlers.HandleDeleteSubArea)
 		r.Post("/v1/climbsearch", handlers.ClimbSearch)
+		r.Post("/v1/ascent", handlers.AddAscent)
 	})
 }

@@ -1,10 +1,12 @@
 {{define "area-search-results"}}
     {{range $result := .}}
-        <div>
-            {{$result.Name}}
-            {{if $result.SubArea}}
-                - {{$result.SubArea}}
-            {{end}}
-        </div>
+        <a href="/area/{{$result.AreaId}}?subArea={{$result.SubArea}}">
+            <div>
+                {{$result.Name}}
+                {{if $result.SubArea}}
+                    - {{$result.SubArea}}
+                {{end}}
+            </div>
+        </a>
     {{end}}
 {{end}}

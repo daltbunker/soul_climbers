@@ -1,11 +1,12 @@
--- name: GetAllAreas :many
-SELECT a.area_id, a.name, a.country, a.sub_areas
-FROM area a;
-
 -- name: GetArea :one
 SELECT a.area_id, a.name, a.country, a.sub_areas
 FROM area a
 WHERE a.area_id = $1;
+
+-- name: GetClimb :one
+SELECT c.climb_id, c.name, c.area_id, c.sub_areas
+FROM climb c 
+WHERE c.climb_id = $1;
 
 -- name: UpdateSubAreas :one
 UPDATE area
@@ -44,17 +45,12 @@ VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: CreateClimb :one
-INSERT INTO climb(area_id, name, type, created_by)
-VALUES ($1, $2, $3, $4)
+INSERT INTO climb(area_id, name, type, created_by, sub_areas)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
--- name: GetAllClimbs :many
-SELECT c.area_id, c.name, c.type
-FROM climb c
-WHERE c.type = $1;
-
 -- name: SearchClimbs :many
-SELECT c.area_id, c.name, c.type
+SELECT c.climb_id, c.area_id, c.name, c.type
 FROM climb c
 WHERE c.type = $1
 AND c.name % $2
@@ -73,3 +69,8 @@ WITH sub_areas AS (
 SELECT sa.area_id, sa.name, sa.sub_area, similarity(sa.sub_area, $1) as sub_area_sml 
 FROM sub_areas sa --WHERE sa.sub_area % $1
 ORDER BY similarity(sa.sub_area, $1) DESC, sa.sub_area;
+
+-- name: GetClimbsByArea :many
+SELECT c.climb_id, c.name, c.sub_areas, c.area_id
+FROM climb c
+WHERE c.area_id = $1;

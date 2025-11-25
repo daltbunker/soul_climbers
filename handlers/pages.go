@@ -578,7 +578,7 @@ func HandleGetClimbForm(w http.ResponseWriter, r *http.Request) {
 func HandleGetClimbSearch(w http.ResponseWriter, r *http.Request) {
 	if pages["climb-search"] == nil {
 		var err error
-		pages["climb-search"], err = template.ParseFS(templates, baseTemplate, "templates/pages/climb-search.html", "templates/components/climb-search-results.html", "templates/components/area-search-results.html")
+		pages["climb-search"], err = template.ParseFS(templates, baseTemplate, "templates/pages/climb-search.html", "templates/components/area-search-results.html", "templates/components/climb-search-results.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -586,6 +586,116 @@ func HandleGetClimbSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderPage(pages["climb-search"], w, r, nil)
+}
+
+func HandleGetArea(w http.ResponseWriter, r *http.Request) {
+	if pages["area"] == nil {
+		var err error
+		pages["area"], err = template.ParseFS(templates, baseTemplate, "templates/pages/area.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+
+	subAreaQuery := r.URL.Query().Get("subArea")
+	paramAreaId := chi.URLParam(r, "id")
+	areaId, err := strconv.Atoi(paramAreaId)	
+	if err != nil {
+		HandleClientError(w, fmt.Errorf("invalid param 'id': %v", areaId))
+		return
+	}
+
+	climbs, err := db.GetClimbsByArea(r, int32(areaId), subAreaQuery)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	area, err := db.GetArea(r, int32(areaId))
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	areaPage := types.AreaPage{
+		Area: area,
+		SubArea: subAreaQuery,
+		Climbs: climbs,
+	}
+	renderPage(pages["area"], w, r, areaPage)
+}
+
+func HandleGetClimb(w http.ResponseWriter, r *http.Request) {
+	if pages["climb"] == nil {
+		var err error
+		pages["climb"], err = template.ParseFS(templates, baseTemplate, "templates/pages/climb.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+
+	paramClimbId := chi.URLParam(r, "id")
+	climbId, err := strconv.Atoi(paramClimbId)	
+	if err != nil {
+		HandleClientError(w, fmt.Errorf("invalid param 'id': %v", climbId))
+		return
+	}
+
+	climb, err := db.GetClimb(r, int32(climbId))
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	area, err := db.GetArea(r, climb.AreaId)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+	ascents, err := db.GetAscentsByClimb(r, int32(climbId))
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	climb.SubAreas = strings.Replace(climb.SubAreas, ",", ", ", -1)
+	climbPage := types.ClimbPage{
+		Climb: climb,
+		Area: area,
+		Ascents: ascents,
+	}
+
+	renderPage(pages["climb"], w, r, climbPage)
+}
+
+func HandleGetAscentForm(w http.ResponseWriter, r *http.Request) {
+	if pages["ascent-form"] == nil {
+		var err error
+		pages["ascent-form"], err = template.ParseFS(templates, baseTemplate, "templates/pages/ascent-form.html", "templates/components/ascent-form.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+
+	paramClimbId := chi.URLParam(r, "id")
+	climbId, err := strconv.Atoi(paramClimbId)	
+	if err != nil {
+		HandleClientError(w, fmt.Errorf("invalid param 'id': %v", climbId))
+		return
+	}
+
+	ratings := []string{"*", "**", "***", "****"}
+	weights := []string{"over 200 pounds", "under 200 pounds"}
+	attempts := []string{"flash", "soft second go", "onsight", "more than 2 tries"}
+
+	ascentForm := types.AscentForm{
+		ClimbId: climbId,
+		RatingOptions: newFormOptions(ratings, ""),
+		WeightOptions: newFormOptions(weights, ""),
+		AttemptOptions: newFormOptions(attempts, ""),
+	}
+	renderPage(pages["ascent-form"], w, r, ascentForm)
 }
 
 func setCookie(w http.ResponseWriter, name string, value string) {

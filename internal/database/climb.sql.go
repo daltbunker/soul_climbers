@@ -44,9 +44,9 @@ func (q *Queries) CreateArea(ctx context.Context, arg CreateAreaParams) (Area, e
 }
 
 const createClimb = `-- name: CreateClimb :one
-INSERT INTO climb(area_id, name, type, created_by)
-VALUES ($1, $2, $3, $4)
-RETURNING climb_id, area_id, name, type, created_by, created_at, updated_at
+INSERT INTO climb(area_id, name, type, created_by, sub_areas)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING climb_id, area_id, name, type, created_by, created_at, updated_at, sub_areas
 `
 
 type CreateClimbParams struct {
@@ -54,6 +54,7 @@ type CreateClimbParams struct {
 	Name      string
 	Type      string
 	CreatedBy int32
+	SubAreas  sql.NullString
 }
 
 func (q *Queries) CreateClimb(ctx context.Context, arg CreateClimbParams) (Climb, error) {
@@ -62,6 +63,7 @@ func (q *Queries) CreateClimb(ctx context.Context, arg CreateClimbParams) (Climb
 		arg.Name,
 		arg.Type,
 		arg.CreatedBy,
+		arg.SubAreas,
 	)
 	var i Climb
 	err := row.Scan(
@@ -72,6 +74,7 @@ func (q *Queries) CreateClimb(ctx context.Context, arg CreateClimbParams) (Climb
 		&i.CreatedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SubAreas,
 	)
 	return i, err
 }
@@ -150,81 +153,6 @@ func (q *Queries) DeleteClimbDraft(ctx context.Context, createdBy int32) (ClimbD
 	return i, err
 }
 
-const getAllAreas = `-- name: GetAllAreas :many
-SELECT a.area_id, a.name, a.country, a.sub_areas
-FROM area a
-`
-
-type GetAllAreasRow struct {
-	AreaID   int32
-	Name     string
-	Country  string
-	SubAreas string
-}
-
-func (q *Queries) GetAllAreas(ctx context.Context) ([]GetAllAreasRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllAreas)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetAllAreasRow
-	for rows.Next() {
-		var i GetAllAreasRow
-		if err := rows.Scan(
-			&i.AreaID,
-			&i.Name,
-			&i.Country,
-			&i.SubAreas,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllClimbs = `-- name: GetAllClimbs :many
-SELECT c.area_id, c.name, c.type
-FROM climb c
-WHERE c.type = $1
-`
-
-type GetAllClimbsRow struct {
-	AreaID int32
-	Name   string
-	Type   string
-}
-
-func (q *Queries) GetAllClimbs(ctx context.Context, type_ string) ([]GetAllClimbsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAllClimbs, type_)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetAllClimbsRow
-	for rows.Next() {
-		var i GetAllClimbsRow
-		if err := rows.Scan(&i.AreaID, &i.Name, &i.Type); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getArea = `-- name: GetArea :one
 SELECT a.area_id, a.name, a.country, a.sub_areas
 FROM area a
@@ -245,6 +173,31 @@ func (q *Queries) GetArea(ctx context.Context, areaID int32) (GetAreaRow, error)
 		&i.AreaID,
 		&i.Name,
 		&i.Country,
+		&i.SubAreas,
+	)
+	return i, err
+}
+
+const getClimb = `-- name: GetClimb :one
+SELECT c.climb_id, c.name, c.area_id, c.sub_areas
+FROM climb c 
+WHERE c.climb_id = $1
+`
+
+type GetClimbRow struct {
+	ClimbID  int32
+	Name     string
+	AreaID   int32
+	SubAreas sql.NullString
+}
+
+func (q *Queries) GetClimb(ctx context.Context, climbID int32) (GetClimbRow, error) {
+	row := q.db.QueryRowContext(ctx, getClimb, climbID)
+	var i GetClimbRow
+	err := row.Scan(
+		&i.ClimbID,
+		&i.Name,
+		&i.AreaID,
 		&i.SubAreas,
 	)
 	return i, err
@@ -279,6 +232,47 @@ func (q *Queries) GetClimbDraft(ctx context.Context, createdBy int32) (GetClimbD
 		&i.Type,
 	)
 	return i, err
+}
+
+const getClimbsByArea = `-- name: GetClimbsByArea :many
+SELECT c.climb_id, c.name, c.sub_areas, c.area_id
+FROM climb c
+WHERE c.area_id = $1
+`
+
+type GetClimbsByAreaRow struct {
+	ClimbID  int32
+	Name     string
+	SubAreas sql.NullString
+	AreaID   int32
+}
+
+func (q *Queries) GetClimbsByArea(ctx context.Context, areaID int32) ([]GetClimbsByAreaRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClimbsByArea, areaID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetClimbsByAreaRow
+	for rows.Next() {
+		var i GetClimbsByAreaRow
+		if err := rows.Scan(
+			&i.ClimbID,
+			&i.Name,
+			&i.SubAreas,
+			&i.AreaID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const searchAreas = `-- name: SearchAreas :many
@@ -324,7 +318,7 @@ func (q *Queries) SearchAreas(ctx context.Context, name string) ([]SearchAreasRo
 }
 
 const searchClimbs = `-- name: SearchClimbs :many
-SELECT c.area_id, c.name, c.type
+SELECT c.climb_id, c.area_id, c.name, c.type
 FROM climb c
 WHERE c.type = $1
 AND c.name % $2
@@ -337,9 +331,10 @@ type SearchClimbsParams struct {
 }
 
 type SearchClimbsRow struct {
-	AreaID int32
-	Name   string
-	Type   string
+	ClimbID int32
+	AreaID  int32
+	Name    string
+	Type    string
 }
 
 func (q *Queries) SearchClimbs(ctx context.Context, arg SearchClimbsParams) ([]SearchClimbsRow, error) {
@@ -351,7 +346,12 @@ func (q *Queries) SearchClimbs(ctx context.Context, arg SearchClimbsParams) ([]S
 	var items []SearchClimbsRow
 	for rows.Next() {
 		var i SearchClimbsRow
-		if err := rows.Scan(&i.AreaID, &i.Name, &i.Type); err != nil {
+		if err := rows.Scan(
+			&i.ClimbID,
+			&i.AreaID,
+			&i.Name,
+			&i.Type,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
