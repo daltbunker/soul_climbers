@@ -592,7 +592,7 @@ func HandleGetClimbSearch(w http.ResponseWriter, r *http.Request) {
 func HandleGetArea(w http.ResponseWriter, r *http.Request) {
 	if pages["area"] == nil {
 		var err error
-		pages["area"], err = template.ParseFS(templates, baseTemplate, "templates/pages/area.html")
+		pages["area"], err = template.ParseFS(templates, baseTemplate, "templates/pages/area.html", "templates/components/climb-search-results.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
