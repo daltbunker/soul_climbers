@@ -19,3 +19,9 @@ DO UPDATE SET
     created_by = $7,
     updated_at = now() 
 RETURNING *;
+
+-- name: DeleteAscent :one
+DELETE FROM ascent
+WHERE created_by = $1
+AND climb_id = $2
+RETURNING *;

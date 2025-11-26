@@ -11,6 +11,7 @@ import (
 	"github.com/daltbunker/soul_climbers/db"
 	"github.com/daltbunker/soul_climbers/types"
 	"github.com/daltbunker/soul_climbers/utils"
+	"github.com/go-chi/chi"
 )
 
 func AddAscent(w http.ResponseWriter, r *http.Request) {
@@ -137,4 +138,25 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Redirect", "/climb/"+climbType+"/"+climbIdStr)
+}
+
+func DeleteAscent(w http.ResponseWriter, r *http.Request) {
+	user, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	climbType := r.URL.Query().Get("climbType")
+	paramClimbId := chi.URLParam(r, "climbId")
+	climbId, err := strconv.Atoi(paramClimbId)
+	if err != nil {
+		log.Printf("Climb id must be type int: %v", err)
+		HandleNotFound(w, r)
+		return
+	}
+
+
+	db.DeleteAscent(r, user.Username, climbId)
+	w.Header().Set("HX-Redirect", "/climb/"+climbType+"/"+paramClimbId)
 }

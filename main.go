@@ -111,5 +111,6 @@ func registerRoutes(r *chi.Mux) {
 		r.Delete("/v1/climb/sub-area", handlers.HandleDeleteSubArea)
 		r.Post("/v1/climbsearch", handlers.ClimbSearch)
 		r.Post("/v1/ascent", handlers.AddAscent)
+		r.Delete("/v1/ascent/{climbId}", handlers.DeleteAscent)
 	})
 }

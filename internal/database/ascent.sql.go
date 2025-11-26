@@ -65,6 +65,36 @@ func (q *Queries) CreateOrUpdateAscent(ctx context.Context, arg CreateOrUpdateAs
 	return i, err
 }
 
+const deleteAscent = `-- name: DeleteAscent :one
+DELETE FROM ascent
+WHERE created_by = $1
+AND climb_id = $2
+RETURNING climb_id, grade, rating, attempts, over_200_pounds, comment, ascent_date, created_by, created_at, updated_at
+`
+
+type DeleteAscentParams struct {
+	CreatedBy int32
+	ClimbID   int32
+}
+
+func (q *Queries) DeleteAscent(ctx context.Context, arg DeleteAscentParams) (Ascent, error) {
+	row := q.db.QueryRowContext(ctx, deleteAscent, arg.CreatedBy, arg.ClimbID)
+	var i Ascent
+	err := row.Scan(
+		&i.ClimbID,
+		&i.Grade,
+		&i.Rating,
+		&i.Attempts,
+		&i.Over200Pounds,
+		&i.Comment,
+		&i.AscentDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getAscentsByClimb = `-- name: GetAscentsByClimb :many
 SELECT a.grade, a.rating, TO_CHAR(a.ascent_date, 'YYYY-MM-DD') as ascent_date, a.over_200_pounds, a.attempts, a.comment, u.username
 FROM ascent a

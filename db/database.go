@@ -678,9 +678,18 @@ func CreateAscent(r *http.Request, ascent types.Ascent) error {
 		CreatedBy: user.UsersID,
 		ClimbID: int32(ascent.ClimbId),
 	})
+	return err
+}
+
+func DeleteAscent(r *http.Request, createdBy string, climbId int) error {
+	user, err := DB.GetUserByUsername(r.Context(), createdBy)
 	if err != nil {
 		return err
 	}
-	
-	return nil
+
+	_, err = DB.DeleteAscent(r.Context(), database.DeleteAscentParams{
+		CreatedBy: user.UsersID,
+		ClimbID: int32(climbId),
+	})
+	return err
 }
