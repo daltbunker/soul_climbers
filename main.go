@@ -98,6 +98,8 @@ func registerRoutes(r *chi.Mux) {
 		r.Get("/area/{id}", handlers.HandleGetArea)
 		r.Get("/climb/{type}/{id}", handlers.HandleGetClimb)
 		r.Get("/climb/{type}/{id}/log", handlers.HandleGetAscentForm)
+		r.Get("/ascents/climb/{id}", handlers.HandleGetUserAscentForm)
+		r.Get("/ascents", handlers.HandleGetUserAscents)
 
 		// data routes
 		r.Get("/v1/admin/blog/{id}/{imgName}", handlers.GetBlogImg)

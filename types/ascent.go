@@ -3,6 +3,7 @@ package types
 type AscentForm struct {
 	NewAscent bool
 	ClimbId int
+	ClimbName string 
 	ClimbType string
 	Date string
 	DateError string 
@@ -27,4 +28,10 @@ type Ascent struct {
 	Attempts string 
 	Comment string 
 	CreatedBy string
+}
+
+type UserAscent struct {
+	Ascent Ascent
+	Area Area
+	Climb Climb
 }

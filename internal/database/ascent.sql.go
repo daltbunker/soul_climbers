@@ -143,3 +143,67 @@ func (q *Queries) GetAscentsByClimb(ctx context.Context, climbID int32) ([]GetAs
 	}
 	return items, nil
 }
+
+const getAscentsByUser = `-- name: GetAscentsByUser :many
+SELECT a.grade, a.rating, TO_CHAR(a.ascent_date, 'YYYY-MM-DD') as ascent_date, a.over_200_pounds, a.attempts, a.comment, u.username,
+ar.area_id, ar.name, c.name as climb_name, c.climb_id, c.type
+FROM ascent a
+INNER JOIN users u
+  ON u.users_id = a.created_by
+INNER JOIN climb c
+  ON c.climb_id = a.climb_id
+INNER JOIN area ar
+  ON ar.area_id = c.area_id
+WHERE a.created_by = $1
+`
+
+type GetAscentsByUserRow struct {
+	Grade         string
+	Rating        string
+	AscentDate    string
+	Over200Pounds bool
+	Attempts      string
+	Comment       sql.NullString
+	Username      string
+	AreaID        int32
+	Name          string
+	ClimbName     string
+	ClimbID       int32
+	Type          string
+}
+
+func (q *Queries) GetAscentsByUser(ctx context.Context, createdBy int32) ([]GetAscentsByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAscentsByUser, createdBy)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAscentsByUserRow
+	for rows.Next() {
+		var i GetAscentsByUserRow
+		if err := rows.Scan(
+			&i.Grade,
+			&i.Rating,
+			&i.AscentDate,
+			&i.Over200Pounds,
+			&i.Attempts,
+			&i.Comment,
+			&i.Username,
+			&i.AreaID,
+			&i.Name,
+			&i.ClimbName,
+			&i.ClimbID,
+			&i.Type,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

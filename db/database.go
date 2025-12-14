@@ -693,3 +693,45 @@ func DeleteAscent(r *http.Request, createdBy string, climbId int) error {
 	})
 	return err
 }
+
+func GetAscentsByUser(r *http.Request, username string) ([]types.UserAscent, error) {
+	user, err := DB.GetUserByUsername(r.Context(), username)
+	if err != nil {
+		return []types.UserAscent{}, err
+	}
+
+	dbAscents , err := DB.GetAscentsByUser(r.Context(), user.UsersID)
+	if err != nil {
+		return []types.UserAscent{}, nil
+	}
+
+	userAscents := []types.UserAscent{}
+	for _, a := range dbAscents {
+		ascent := types.Ascent{
+			Grade: a.Grade, 
+			Rating: a.Rating, 
+			AscentDate: a.AscentDate, 
+			Over200Pounds: a.Over200Pounds, 
+			Attempts: a.Attempts, 
+			Comment: a.Comment.String, 
+			CreatedBy: a.Username,
+		}
+		area := types.Area{
+			AreaId: a.AreaID,
+			Name: a.Name,
+		}
+		climb := types.Climb{
+			ClimbId: a.ClimbID,
+			Name: a.ClimbName,
+			Type: a.Type,
+		}
+		userAscent := types.UserAscent{
+			Ascent: ascent,
+			Area: area,
+			Climb: climb,
+		}
+		userAscents = append(userAscents, userAscent)
+	}
+
+	return userAscents, nil
+}

@@ -17,6 +17,14 @@ import (
 func AddAscent(w http.ResponseWriter, r *http.Request) {
 	climbType := r.URL.Query().Get("climbType")
 	climbIdStr := r.URL.Query().Get("climbId")
+	newAscent := r.URL.Query().Get("newAscent")
+
+	climbId, err := strconv.Atoi(climbIdStr)
+	if err != nil {
+		log.Printf("Climb id must be type int: %v", err)
+		HandleNotFound(w, r)
+		return
+	}
 
 	date := sanitize(r.FormValue("date"))
 	grade := sanitize(r.FormValue("grade"))
@@ -42,7 +50,7 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 	clientErrors := []string{}
 	formError := false
 
-	_, err := time.Parse("2006-01-02", date)
+	_, err = time.Parse("2006-01-02", date)
 	if date == "" {
 		formError = true 
 		dateError = "required"
@@ -83,6 +91,9 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 	}
 	if formError {
 		ascentForm := types.AscentForm{
+			ClimbId: climbId,
+			ClimbType: climbType,
+			NewAscent: newAscent == "true",
 			Date: date,
 			DateError: dateError,
 			Grade: grade,
@@ -98,13 +109,6 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 		}
 
 		renderComponent(w, "ascent-form", "ascent-form", ascentForm)
-		return
-	}
-
-	climbId, err := strconv.Atoi(climbIdStr)
-	if err != nil {
-		log.Printf("Climb id must be type int: %v", err)
-		HandleNotFound(w, r)
 		return
 	}
 
@@ -137,7 +141,7 @@ func AddAscent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Redirect", "/climb/"+climbType+"/"+climbIdStr)
+	w.Header().Set("HX-Refresh", "true")
 }
 
 func DeleteAscent(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +151,6 @@ func DeleteAscent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	climbType := r.URL.Query().Get("climbType")
 	paramClimbId := chi.URLParam(r, "climbId")
 	climbId, err := strconv.Atoi(paramClimbId)
 	if err != nil {
@@ -156,7 +159,11 @@ func DeleteAscent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = db.DeleteAscent(r, user.Username, climbId)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
 
-	db.DeleteAscent(r, user.Username, climbId)
-	w.Header().Set("HX-Redirect", "/climb/"+climbType+"/"+paramClimbId)
+	w.Header().Set("HX-Refresh", "true")
 }

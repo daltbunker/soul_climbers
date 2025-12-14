@@ -23,5 +23,5 @@
 {{else}}
     <div>No Ascents</div>
 {{end}}
-<a href="/climb/{{.Climb.Type}}/{{.Climb.ClimbId}}/log"><button class="btn-primary">Log Ascent</button></a>
+<button hx-get="/climb/{{.Climb.Type}}/{{.Climb.ClimbId}}/log" hx-target="body" hx-swap="beforeend" class="btn-primary">Log Ascent</button>
 {{end}}

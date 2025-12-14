@@ -1,0 +1,17 @@
+{{define "content"}}
+<h2>User Ascents</h2>
+{{range $userAscent:= .}}
+    <div>
+        <div><a href="/climb/{{.Climb.Type}}/{{.Climb.ClimbId}}">{{.Climb.Name}}</a> - <a href="/area/{{.Area.AreaId}}">{{.Area.Name}}</a> - {{.Ascent.AscentDate}}</div>
+        <div><span style="background-color: {{.Ascent.Grade}}; width: 10px; height: 10px; display: inline-block"></span> {{.Ascent.Rating}}</div>
+        <div>{{.Ascent.Attempts}}</div>
+        {{if .Ascent.Over200Pounds}}
+        <div>Over 200 pounds</div>
+        {{else}}
+        <div>Under 200 pounds</div>
+        {{end}}
+        <div>{{.Ascent.Comment}}</div>
+        <button hx-get="/ascents/climb/{{.Climb.ClimbId}}" hx-target="body" hx-swap="beforeend" class="btn-secondary">edit</button>
+    </div>
+{{end}}
+{{end}}

@@ -12,6 +12,7 @@
     <nav>
         <a href="/">Soul Climbers</a>
         <div class="line-up">
+            <a href="/climb">climb</a>
             {{if .User.Username}}
                 <a href="/account">account</a>
             {{else}}
@@ -26,4 +27,5 @@
         {{template "content" .MainContent}}
     </div>
 </body>
+<script src="/static/script.js"></script>
 </html>

@@ -629,7 +629,8 @@ func HandleGetArea(w http.ResponseWriter, r *http.Request) {
 func HandleGetClimb(w http.ResponseWriter, r *http.Request) {
 	if pages["climb"] == nil {
 		var err error
-		pages["climb"], err = template.ParseFS(templates, baseTemplate, "templates/pages/climb.html")
+		pages["climb"], err = template.ParseFS(templates, baseTemplate, "templates/pages/climb.html", 
+			"templates/components/modal.html", "templates/components/ascent-form.html")
 		if err != nil {
 			HandleServerError(w, r, err)
 			return
@@ -684,20 +685,14 @@ func HandleGetAscentForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	climb, err := db.GetClimb(r, int32(climbId))
+
 	prevAscent := types.Ascent{}
 	ascents, err := db.GetAscentsByClimb(r, int32(climbId))
 	for _, ascent := range ascents {
 		if ascent.CreatedBy == user.Username {
-			prevAscent = ascent	
-		}
-	}
-
-	if pages["ascent-form"] == nil {
-		var err error
-		pages["ascent-form"], err = template.ParseFS(templates, baseTemplate, "templates/pages/ascent-form.html", "templates/components/ascent-form.html")
-		if err != nil {
-			HandleServerError(w, r, err)
-			return
+			prevAscent = ascent
+			log.Println("user has previous ascent")
 		}
 	}
 
@@ -720,6 +715,7 @@ func HandleGetAscentForm(w http.ResponseWriter, r *http.Request) {
 	ascentForm := types.AscentForm{
 		NewAscent: prevAscent.AscentDate == "",
 		ClimbId: climbId,
+		ClimbName: climb.Name,
 		ClimbType: climbType,
 		RatingOptions: newFormOptions(ratings, prevAscent.Rating),
 		WeightOptions: newFormOptions(weights, prevAscentWeightOption),
@@ -728,7 +724,88 @@ func HandleGetAscentForm(w http.ResponseWriter, r *http.Request) {
 		Date: prevAscent.AscentDate,
 		Comment: prevAscent.Comment,
 	}
-	renderPage(pages["ascent-form"], w, r, ascentForm)
+
+	renderComponent(w, "climb", "modal", ascentForm)
+}
+
+func HandleGetUserAscents(w http.ResponseWriter, r *http.Request) {
+	user, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	if pages["user-ascents"] == nil {
+		var err error
+		pages["user-ascents"], err = template.ParseFS(templates, baseTemplate, "templates/pages/user-ascents.html",
+			"templates/components/modal.html", "templates/components/ascent-form.html")
+		if err != nil {
+			HandleServerError(w, r, err)
+			return
+		}
+	}
+
+	userAscents, err := db.GetAscentsByUser(r, user.Username)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	renderPage(pages["user-ascents"], w, r, userAscents)
+}
+
+func HandleGetUserAscentForm(w http.ResponseWriter, r *http.Request) {
+	user, err := GetSessionUser(r)
+	if err != nil {
+		HandleServerError(w, r, err)
+		return
+	}
+
+	paramClimbId := chi.URLParam(r, "id")
+	climbId, err := strconv.Atoi(paramClimbId)	
+	if err != nil {
+		HandleClientError(w, fmt.Errorf("invalid param 'id': %v", climbId))
+		return
+	}
+
+	prevAscent := types.UserAscent{}
+	ascents, err := db.GetAscentsByUser(r, user.Username)
+	for _, ascent := range ascents {
+		if ascent.Climb.ClimbId == int32(climbId) {
+			prevAscent = ascent
+		}
+	}
+	if prevAscent.Climb.ClimbId == 0 {
+		log.Printf("user ascent not found with climb id: %v", climbId)
+		HandleClientError(w, fmt.Errorf("user ascent not found"))
+		return
+	}
+
+	ratings := utils.GetAscentRatings()
+	weights := utils.GetAscentWeights() 
+	attempts:= utils.GetAscentAttempts()
+	if prevAscent.Climb.Type != "boulder" {
+		attempts = append(attempts, "onsight")
+	}
+
+	prevAscentWeightOption := weights[1]
+	if prevAscent.Ascent.Over200Pounds == true {
+		prevAscentWeightOption = weights[0]
+	}
+	ascentForm := types.AscentForm{
+		NewAscent: false,
+		ClimbId: climbId,
+		ClimbName: prevAscent.Climb.Name,
+		ClimbType: prevAscent.Climb.Type,
+		RatingOptions: newFormOptions(ratings, prevAscent.Ascent.Rating),
+		WeightOptions: newFormOptions(weights, prevAscentWeightOption),
+		AttemptOptions: newFormOptions(attempts, prevAscent.Ascent.Attempts),
+		Grade: prevAscent.Ascent.Grade,
+		Date: prevAscent.Ascent.AscentDate,
+		Comment: prevAscent.Ascent.Comment,
+	}
+
+	renderComponent(w, "user-ascents", "modal", ascentForm)
 }
 
 func setCookie(w http.ResponseWriter, name string, value string) {

@@ -1,0 +1,8 @@
+{{define "modal"}}
+<div class="modal-container">
+    <div class="modal-body">
+        <button id="close-ascent-modal" onclick="closeModal()" class="x-btn">&#10005;</button>
+        {{template "modal-body" .}}
+    </div>
+</div>
+{{end}}
